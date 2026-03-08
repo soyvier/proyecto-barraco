@@ -1,0 +1,172 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1e3a5f;
+  --color-primary-light: #2a5a8f;
+  --color-accent: #c9a84c;
+  --color-accent-light: #e0c36a;
+  --color-success: #22c55e;
+  --color-danger: #ef4444;
+  --color-warning: #f59e0b;
+  --color-bone: #f5f0e8;
+  --color-dark: #0a0a0f;
+  --color-dark-card: #12121a;
+  --color-dark-border: #1e1e2a;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply font-sans antialiased;
+    margin: 0;
+    background: #0a0a0f;
+    color: #f5f0e8;
+  }
+}
+
+/* Background slideshow */
+.bg-slideshow {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.bg-slideshow img {
+  position: absolute;
+  inset: -40px;
+  width: calc(100% + 80px);
+  height: calc(100% + 80px);
+  object-fit: cover;
+  image-rendering: auto;
+  filter: blur(1px) brightness(0.35) saturate(0.8);
+  transition: opacity 4s ease-in-out;
+  animation: bg-drift 25s ease-in-out infinite alternate;
+}
+
+@keyframes bg-drift {
+  0%   { transform: scale(1.0)  translate(0, 0); }
+  25%  { transform: scale(1.03) translate(-8px, -5px); }
+  50%  { transform: scale(1.05) translate(5px, -8px); }
+  75%  { transform: scale(1.03) translate(-3px, 6px); }
+  100% { transform: scale(1.0)  translate(6px, 3px); }
+}
+
+/* Starfield canvas */
+.starfield {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Home cards */
+.card-glass {
+  background: rgba(245, 240, 232, 0.03);
+  border: 1px solid rgba(245, 240, 232, 0.12);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.5s ease,
+              backdrop-filter 0.5s ease;
+  cursor: pointer;
+}
+
+.card-glass:hover:not(.disabled) {
+  transform: scale(1.05);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-color: rgba(245, 240, 232, 0.35);
+}
+
+.card-glass .card-subtitle {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, opacity 0.4s ease, margin 0.4s ease;
+  margin-top: 0;
+}
+
+.card-glass:hover:not(.disabled) .card-subtitle {
+  max-height: 3rem;
+  opacity: 1;
+  margin-top: 0.5rem;
+}
+
+.card-glass.disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+/* Dark cards for inner pages */
+.card-dark {
+  background: rgba(18, 18, 26, 0.8);
+  border: 1px solid rgba(245, 240, 232, 0.08);
+  backdrop-filter: blur(8px);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.4s ease;
+}
+
+.card-dark:hover {
+  transform: scale(1.03);
+  border-color: rgba(245, 240, 232, 0.2);
+}
+
+/* Entrance animations */
+@keyframes fade-down {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.anim-fade-down {
+  animation: fade-down 0.8s ease forwards;
+}
+
+.anim-fade-up {
+  animation: fade-up 0.8s ease forwards;
+}
+
+.anim-delay-1 { animation-delay: 0.3s; opacity: 0; }
+.anim-delay-2 { animation-delay: 0.6s; opacity: 0; }
+.anim-delay-3 { animation-delay: 0.9s; opacity: 0; }
+
+/* Timer */
+@keyframes pulse-warning {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.timer-warning {
+  animation: pulse-warning 1s infinite;
+}
+
+.progress-bar {
+  transition: width 0.3s ease;
+}
+
+/* Exam option styling */
+.exam-option {
+  background: rgba(245, 240, 232, 0.03);
+  border: 1px solid rgba(245, 240, 232, 0.1);
+  transition: all 0.25s ease;
+}
+
+.exam-option:hover:not(.selected) {
+  border-color: rgba(245, 240, 232, 0.25);
+  background: rgba(245, 240, 232, 0.06);
+}
+
+.exam-option.selected {
+  border-color: var(--color-accent);
+  background: rgba(201, 168, 76, 0.1);
+}
+
+/* Scrollbar dark */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(245,240,232,0.15); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(245,240,232,0.25); }
