@@ -4,6 +4,46 @@ Este documento se actualiza al final de cada sesion para que al compactar la con
 
 ---
 
+## Sesion 7 (2026-03-11)
+
+### Lo que se hizo:
+1. **Analisis de 5 packs de preguntas de academia profesional** (~75 imagenes de examenes reales)
+   - Pack 1-5: capturas de pantalla de examenes psicotecnicos de academia policial
+   - Clasificacion de tipos existentes vs nuevos
+   - Compilacion de lista final de 15 nuevos tipos de preguntas
+
+2. **15 nuevos generadores de preguntas implementados:**
+   - **Series de fracciones** (8 patrones: geometrica, armonica, Fibonacci, cuadrados...)
+   - **Codificacion letra-numero** ("621734"=BACHIL, que codigo=ARCO?)
+   - **Operaciones con simbolos** ($=+5, &=x2 → evaluar cadena)
+   - **Significado de refranes** (24 refranes con significado correcto + 3 distractores)
+   - **Contar digito con condicion** ("cuantas veces 7 va precedido de impar" en cadena larga)
+   - **Pareja de antonimos incorrecta** (4 pares, cual NO son antonimos)
+   - **Sinonimos en contexto** (sustituir palabra entrecomillada, 20 frases)
+   - **Palabra mas dispar** (cual es MAS diferente a X, 20 items)
+   - **Letra unica en grupos** (que palabra tiene letra que no aparece en las otras)
+   - **Arboles numericos** ([a,b,c]→resultado, deducir patron, 6 tipos)
+   - **Consonante mas repetida en tabla** (cuadricula 6x8 caracteres)
+   - **Comprension de texto estadistico** (problemas con porcentajes/datos, 6 tipos)
+   - **Codificacion de bloques de digitos** (bloques 2-digitos → letras)
+   - **Descifrar simbolo-numero** (deducir mapeo por eliminacion)
+   - **Idioma inventado** (reglas de idioma ficticio, traducir, 8 sets)
+
+### Archivos modificados:
+- `app/src/services/visualQuestions.js` - 15 nuevos generadores de texto (42-56), actualizados TEXT_GENERATORS y FACTOR_GENERATORS
+
+### Estado actual:
+- 27 tipos visuales + 27 tipos texto = 54 tipos de preguntas totales
+- 4200 preguntas stress-tested (1200 visual + 1000 texto + 2000 factor), 0 errores
+- Build OK (414KB JS, 28KB CSS)
+- Todos los nuevos tipos integrados en pools de factor (verbal, razonamiento, numerico, espacial)
+
+### Pendiente:
+- Commit y push (requiere aprobacion)
+- Testing visual en navegador
+
+---
+
 ## Sesion 6 (2026-03-08)
 
 ### Lo que se hizo:

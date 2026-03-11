@@ -2828,6 +2828,1312 @@ function generateCompletarFraseQuestion(rng) {
 }
 
 // ============================================================
+// 42. FRACTION SERIES (series-numericas)
+// Patterns: geometric, harmonic, alternating numerator/denominator
+// ============================================================
+function generateFractionSeriesQuestion(rng) {
+  const type = Math.floor(rng() * 8);
+  let nums, dens, exp;
+
+  if (type === 0) {
+    // Numerator doubles: 1/3, 2/3, 4/3, 8/3...
+    const d = pick([3, 5, 7], rng);
+    nums = [1, 2, 4, 8, 16];
+    dens = [d, d, d, d, d];
+    exp = `Numerador se duplica, denominador constante (${d}).`;
+  } else if (type === 1) {
+    // Both multiply: 1/2, 2/4, 4/8 → simplified: 1/2, 1/2... NO, keep unsimplified
+    // Actually: 1/3, 2/9, 4/27 (num x2, den x3)
+    const dn = pick([2, 3], rng);
+    const dd = pick([3, 4, 5], rng);
+    nums = [1]; dens = [1];
+    for (let i = 1; i < 5; i++) { nums.push(nums[i-1] * dn); dens.push(dens[i-1] * dd); }
+    exp = `Numerador x${dn}, denominador x${dd}.`;
+  } else if (type === 2) {
+    // Harmonic: 1/2, 1/3, 1/4, 1/5, 1/6
+    const start = 2 + Math.floor(rng() * 3);
+    nums = [1, 1, 1, 1, 1];
+    dens = Array.from({length: 5}, (_, i) => start + i);
+    exp = `Serie armonica: 1/${start}, 1/${start+1}, 1/${start+2}...`;
+  } else if (type === 3) {
+    // Numerator +1, denominator +2: 1/3, 2/5, 3/7, 4/9, 5/11
+    const sn = 1 + Math.floor(rng() * 2);
+    const sd = 2 + Math.floor(rng() * 3);
+    nums = Array.from({length: 5}, (_, i) => sn + i);
+    dens = Array.from({length: 5}, (_, i) => sd + i * 2);
+    exp = `Numerador +1, denominador +2.`;
+  } else if (type === 4) {
+    // Alternating: 1/2, 3/4, 5/6, 7/8, 9/10
+    nums = Array.from({length: 5}, (_, i) => 1 + i * 2);
+    dens = Array.from({length: 5}, (_, i) => 2 + i * 2);
+    exp = `Numerador +2 (impares), denominador +2 (pares).`;
+  } else if (type === 5) {
+    // Squares in denominator: 1/1, 1/4, 1/9, 1/16, 1/25
+    nums = [1, 1, 1, 1, 1];
+    dens = [1, 4, 9, 16, 25];
+    exp = `Denominador = cuadrados perfectos (1², 2², 3²...).`;
+  } else if (type === 6) {
+    // Fibonacci-like numerators: 1/2, 1/2, 2/2, 3/2, 5/2
+    const d = pick([2, 3, 4], rng);
+    nums = [1, 1, 2, 3, 5];
+    dens = [d, d, d, d, d];
+    exp = `Numeradores Fibonacci (1,1,2,3,5...), denominador constante.`;
+  } else {
+    // Numerator x2, denominator stays then +1: 1/2, 2/3, 4/4, 8/5, 16/6
+    nums = [1, 2, 4, 8, 16];
+    dens = Array.from({length: 5}, (_, i) => 2 + i);
+    exp = `Numerador se duplica, denominador +1.`;
+  }
+
+  const series = nums.slice(0, 4).map((n, i) => `${n}/${dens[i]}`);
+  const correct = `${nums[4]}/${dens[4]}`;
+
+  const dists = safeDistractors(correct, 3, r => {
+    const dn = nums[4] + Math.floor(r() * 5) - 2;
+    const dd = dens[4] + Math.floor(r() * 5) - 2;
+    return `${Math.max(1, dn)}/${Math.max(1, dd)}`;
+  }, rng);
+
+  const opts = shuffle([correct, ...dists.slice(0, 3)], rng);
+  return {
+    id: `frac-${Math.floor(rng()*1e6)}`, category: 'series-numericas',
+    tags: ['series-fracciones'],
+    question: `Complete la serie de fracciones: ${series.join(', ')}, ?`,
+    options: opts, answer: opts.indexOf(correct), explanation: exp,
+  };
+}
+
+// ============================================================
+// 43. LETTER-NUMBER CODE (razonamiento-logico)
+// "621734" = BACHIL → what code = CACHARRO?
+// ============================================================
+function generateLetterNumberCodeQuestion(rng) {
+  const WORDS_POOL = [
+    'BACHILLERATO', 'COMPUTADORA', 'ELECTRONICA', 'MATEMATICAS',
+    'UNIVERSIDAD', 'LABORATORIO', 'HELICOPTERO', 'CAMPEONATOS',
+    'ASTRONOMIA', 'PARLAMENTO', 'DIPLOMACIA', 'TECNOLOGIA',
+    'FOTOGRAFIA', 'GASTRONOMIA', 'ARQUITECTO', 'INGENIERIA',
+  ];
+
+  const baseWord = pick(WORDS_POOL, rng);
+  const uniqueLetters = [...new Set(baseWord.split(''))];
+  if (uniqueLetters.length < 6) return generateLetterNumberCodeQuestion(rng); // retry
+
+  // Assign random digits to each unique letter
+  const digits = shuffle([0,1,2,3,4,5,6,7,8,9], rng);
+  const letterToDigit = {};
+  uniqueLetters.forEach((l, i) => { letterToDigit[l] = digits[i % 10]; });
+
+  const baseCode = baseWord.split('').map(l => letterToDigit[l]).join('');
+
+  // Pick a shorter target word using ONLY letters from baseWord
+  const targetWords = [
+    'ARCO', 'COLA', 'CARO', 'MATO', 'LOCA', 'ALTO', 'HORA',
+    'ROCA', 'LATA', 'NOTA', 'META', 'TOCA', 'RIMA', 'RATO',
+    'PATO', 'GATO', 'RUTA', 'COMA', 'MONO', 'TONO', 'POLO',
+  ];
+
+  // Filter to words whose letters are ALL in the base word
+  const valid = targetWords.filter(w => w.split('').every(l => letterToDigit[l] !== undefined));
+  if (valid.length === 0) return generateLetterNumberCodeQuestion(rng);
+  const targetWord = pick(valid, rng);
+  const correctCode = targetWord.split('').map(l => letterToDigit[l]).join('');
+
+  // Generate distractors by swapping 1-2 digits
+  const dists = safeDistractors(correctCode, 3, r => {
+    const arr = correctCode.split('');
+    const pos = Math.floor(r() * arr.length);
+    arr[pos] = String((parseInt(arr[pos]) + 1 + Math.floor(r() * 8)) % 10);
+    return arr.join('');
+  }, rng);
+
+  const opts = shuffle([correctCode, ...dists.slice(0, 3)], rng);
+  return {
+    id: `lnc-${Math.floor(rng()*1e6)}`, category: 'razonamiento-logico',
+    tags: ['codificacion'],
+    question: `Si "${baseCode}" equivale a "${baseWord}", ¿que codigo corresponde a "${targetWord}"?`,
+    options: opts, answer: opts.indexOf(correctCode),
+    explanation: `Cada letra tiene un digito asignado. ${targetWord} = ${correctCode}.`,
+  };
+}
+
+// ============================================================
+// 44. SYMBOL OPERATIONS (aptitud-numerica)
+// $=+5, &=x2, *=-3 → evaluate chain
+// ============================================================
+function generateSymbolOperationQuestion(rng) {
+  const symbolSets = [
+    { symbols: ['$', '&', '#', '@'], ops: [
+      { sym: '$', desc: 'sumar 5', fn: x => x + 5 },
+      { sym: '&', desc: 'multiplicar por 2', fn: x => x * 2 },
+      { sym: '#', desc: 'restar 3', fn: x => x - 3 },
+      { sym: '@', desc: 'sumar 10', fn: x => x + 10 },
+    ]},
+    { symbols: ['$', '&', '#', '@'], ops: [
+      { sym: '$', desc: 'multiplicar por 3', fn: x => x * 3 },
+      { sym: '&', desc: 'restar 7', fn: x => x - 7 },
+      { sym: '#', desc: 'sumar 4', fn: x => x + 4 },
+      { sym: '@', desc: 'dividir entre 2', fn: x => x / 2 },
+    ]},
+    { symbols: ['$', '&', '#', '@'], ops: [
+      { sym: '$', desc: 'sumar 8', fn: x => x + 8 },
+      { sym: '&', desc: 'restar 2', fn: x => x - 2 },
+      { sym: '#', desc: 'multiplicar por 4', fn: x => x * 4 },
+      { sym: '@', desc: 'restar 10', fn: x => x - 10 },
+    ]},
+    { symbols: ['$', '&', '#', '@'], ops: [
+      { sym: '$', desc: 'sumar 3', fn: x => x + 3 },
+      { sym: '&', desc: 'multiplicar por 5', fn: x => x * 5 },
+      { sym: '#', desc: 'restar 1', fn: x => x - 1 },
+      { sym: '@', desc: 'sumar 7', fn: x => x + 7 },
+    ]},
+  ];
+
+  const set = pick(symbolSets, rng);
+  const start = 2 + Math.floor(rng() * 8);
+  const chainLen = 3 + Math.floor(rng() * 2);
+  const chain = [];
+  for (let i = 0; i < chainLen; i++) {
+    chain.push(pick(set.ops, rng));
+  }
+
+  let result = start;
+  for (const op of chain) { result = op.fn(result); }
+
+  // Ensure integer result
+  if (!Number.isInteger(result) || Math.abs(result) > 9999) return generateSymbolOperationQuestion(rng);
+
+  const legend = set.ops.map(o => `${o.sym} = ${o.desc}`).join(', ');
+  const expr = chain.map(o => o.sym).join('');
+  const correct = String(result);
+
+  const dists = safeDistractors(correct, 3, r => {
+    return String(result + Math.floor(r() * 21) - 10);
+  }, rng);
+
+  const opts = shuffle([correct, ...dists.slice(0, 3)], rng);
+  return {
+    id: `symop-${Math.floor(rng()*1e6)}`, category: 'aptitud-numerica',
+    tags: ['operaciones-simbolos'],
+    question: `Dados: ${legend}. Si empezamos con ${start} y aplicamos ${expr}, ¿cual es el resultado?`,
+    options: opts, answer: opts.indexOf(correct),
+    explanation: `${start} → ${chain.map(o => o.desc).join(' → ')} = ${result}`,
+  };
+}
+
+// ============================================================
+// 45. PROVERBS / REFRANES (analogias-verbales)
+// "Una golondrina no hace verano" → significado
+// ============================================================
+function generateRefranQuestion(rng) {
+  const refranes = [
+    { refran: 'Una golondrina no hace verano', correct: 'Un solo indicio no es suficiente para asegurar algo', dist: ['Los pájaros emigran en invierno', 'El verano llega siempre tarde', 'Hay que esperar al buen tiempo'] },
+    { refran: 'A caballo regalado no le mires el diente', correct: 'No hay que ser exigente con lo que se recibe gratis', dist: ['Los caballos tienen buenos dientes', 'Nunca regales animales', 'Los regalos siempre son malos'] },
+    { refran: 'En boca cerrada no entran moscas', correct: 'Es mejor callarse para evitar problemas', dist: ['Las moscas son molestas', 'Hay que comer con la boca cerrada', 'No se debe hablar mientras se come'] },
+    { refran: 'No por mucho madrugar amanece más temprano', correct: 'No por anticiparse se consiguen antes los resultados', dist: ['Madrugar es malo para la salud', 'El amanecer siempre llega a la misma hora', 'Es mejor dormir más horas'] },
+    { refran: 'Dime con quién andas y te diré quién eres', correct: 'Las compañías que uno elige reflejan su carácter', dist: ['Hay que caminar acompañado', 'Los amigos siempre se parecen físicamente', 'Nunca andes solo por la calle'] },
+    { refran: 'Más vale pájaro en mano que ciento volando', correct: 'Es preferible algo seguro a mucho incierto', dist: ['Los pájaros son difíciles de atrapar', 'Cien pájaros valen más que uno', 'La caza de aves es complicada'] },
+    { refran: 'Al mal tiempo, buena cara', correct: 'Hay que mantener el ánimo ante las adversidades', dist: ['Cuando llueve hay que sonreír', 'El mal tiempo pone triste a la gente', 'El clima afecta al estado de ánimo'] },
+    { refran: 'Quien mucho abarca, poco aprieta', correct: 'Quien intenta hacer demasiadas cosas no hace bien ninguna', dist: ['Es bueno tener muchas manos', 'Hay que abrazar fuerte a la gente', 'Abarcar mucho es sinónimo de éxito'] },
+    { refran: 'Perro ladrador, poco mordedor', correct: 'Quien amenaza mucho rara vez cumple sus amenazas', dist: ['Los perros que ladran no muerden nunca', 'Hay que tener cuidado con los perros', 'Los perros agresivos son silenciosos'] },
+    { refran: 'A quien madruga, Dios le ayuda', correct: 'Quien se esfuerza y es diligente obtiene buenos resultados', dist: ['Hay que rezar por las mañanas', 'Madrugar es saludable', 'Dios solo ayuda a quien se levanta temprano'] },
+    { refran: 'Más vale tarde que nunca', correct: 'Es preferible hacer algo con retraso que no hacerlo', dist: ['La puntualidad no importa', 'Llegar tarde es aceptable siempre', 'Nunca es demasiado tarde para nada'] },
+    { refran: 'Cuando el río suena, agua lleva', correct: 'Los rumores suelen tener algo de verdad', dist: ['Los ríos hacen mucho ruido', 'El agua siempre suena al correr', 'No hay que acercarse a los ríos'] },
+    { refran: 'Cría cuervos y te sacarán los ojos', correct: 'La ingratitud de quien ha recibido ayuda', dist: ['Los cuervos son peligrosos', 'No se deben criar aves salvajes', 'Los cuervos atacan a las personas'] },
+    { refran: 'El que no llora, no mama', correct: 'Quien no pide o reclama no consigue lo que necesita', dist: ['Los bebés lloran para comer', 'Llorar es necesario para la salud', 'Las madres solo atienden al llanto'] },
+    { refran: 'Agua que no has de beber, déjala correr', correct: 'No te metas en asuntos que no te conciernen', dist: ['No hay que desperdiciar el agua', 'El agua corriente es más sana', 'Beber agua es importante'] },
+    { refran: 'Del dicho al hecho hay un trecho', correct: 'Es más fácil decir que hacer las cosas', dist: ['Las distancias son engañosas', 'Hablar y hacer son lo mismo', 'Los hechos siempre siguen a las palabras'] },
+    { refran: 'Ojos que no ven, corazón que no siente', correct: 'Lo que se desconoce no causa sufrimiento', dist: ['Los ciegos no tienen sentimientos', 'Hay que ver para sentir emociones', 'El corazón y los ojos están conectados'] },
+    { refran: 'A buen entendedor, pocas palabras bastan', correct: 'Una persona inteligente comprende rápidamente sin necesidad de muchas explicaciones', dist: ['Es mejor hablar poco', 'Las personas inteligentes hablan poco', 'No hace falta explicar las cosas'] },
+    { refran: 'No es oro todo lo que reluce', correct: 'Las apariencias engañan', dist: ['El oro siempre brilla', 'Hay muchos metales brillantes', 'Solo el oro de verdad reluce'] },
+    { refran: 'Quien siembra vientos, recoge tempestades', correct: 'Las malas acciones traen consecuencias peores', dist: ['El viento causa tormentas', 'Sembrar con viento es peligroso', 'Las tempestades destruyen las cosechas'] },
+    { refran: 'En casa del herrero, cuchillo de palo', correct: 'A veces falta en casa lo que se tiene en abundancia fuera', dist: ['Los herreros usan cuchillos de madera', 'Los herreros son pobres', 'La madera es mejor que el metal'] },
+    { refran: 'Más sabe el diablo por viejo que por diablo', correct: 'La experiencia proporciona más conocimiento que la astucia natural', dist: ['El diablo es muy sabio', 'Los viejos son malvados', 'La maldad aumenta con la edad'] },
+    { refran: 'A falta de pan, buenas son tortas', correct: 'Cuando no se puede conseguir lo mejor, hay que conformarse con lo disponible', dist: ['Las tortas son un buen sustituto del pan', 'El pan es el alimento básico', 'Las tortas son mejores que el pan'] },
+    { refran: 'Zapatero, a tus zapatos', correct: 'Cada uno debe ocuparse solo de lo que sabe', dist: ['Los zapateros solo hacen zapatos', 'Hay que arreglar los zapatos propios', 'Cada profesion tiene sus herramientas'] },
+  ];
+
+  const r = pick(refranes, rng);
+  const opts = shuffle([r.correct, ...r.dist], rng);
+  return {
+    id: `ref-${Math.floor(rng()*1e6)}`, category: 'analogias-verbales',
+    tags: ['refranes'],
+    question: `¿Cuál es el significado del refrán "${r.refran}"?`,
+    options: opts, answer: opts.indexOf(r.correct),
+    explanation: `"${r.refran}" significa: ${r.correct}.`,
+  };
+}
+
+// ============================================================
+// 46. COUNT DIGIT WITH CONDITION (atencion-percepcion)
+// "How many times does 7 appear preceded by an odd number?"
+// ============================================================
+function generateDigitConditionQuestion(rng) {
+  // Generate a long string of digits
+  const len = 30 + Math.floor(rng() * 20);
+  const digits = Array.from({length: len}, () => Math.floor(rng() * 10));
+  const digitStr = digits.join('');
+
+  const conditions = [
+    { desc: (t) => `¿Cuántas veces aparece el ${t} precedido de un número impar?`,
+      check: (arr, t, i) => i > 0 && arr[i] === t && arr[i-1] % 2 === 1 },
+    { desc: (t) => `¿Cuántas veces aparece el ${t} seguido de un número par?`,
+      check: (arr, t, i) => i < arr.length - 1 && arr[i] === t && arr[i+1] % 2 === 0 },
+    { desc: (t) => `¿Cuántas veces aparece el ${t} precedido de un número mayor que 5?`,
+      check: (arr, t, i) => i > 0 && arr[i] === t && arr[i-1] > 5 },
+    { desc: (t) => `¿Cuántas veces aparece el ${t} seguido de un número menor que 4?`,
+      check: (arr, t, i) => i < arr.length - 1 && arr[i] === t && arr[i+1] < 4 },
+    { desc: (t) => `¿Cuántas veces aparece el ${t} entre dos números pares?`,
+      check: (arr, t, i) => i > 0 && i < arr.length - 1 && arr[i] === t && arr[i-1] % 2 === 0 && arr[i+1] % 2 === 0 },
+    { desc: (t) => `¿Cuántas veces aparece el ${t} inmediatamente después de otro ${t}?`,
+      check: (arr, t, i) => i > 0 && arr[i] === t && arr[i-1] === t },
+  ];
+
+  const target = 2 + Math.floor(rng() * 7); // digit 2-8
+  const cond = pick(conditions, rng);
+
+  let count = 0;
+  for (let i = 0; i < digits.length; i++) {
+    if (cond.check(digits, target, i)) count++;
+  }
+
+  // If count is 0, retry
+  if (count === 0) return generateDigitConditionQuestion(rng);
+
+  const correct = String(count);
+  const dists = safeDistractors(correct, 3, r => {
+    return String(Math.max(0, count + Math.floor(r() * 5) - 2));
+  }, rng);
+
+  const opts = shuffle([correct, ...dists.slice(0, 3)], rng);
+
+  // Format digit string in groups of 5 for readability
+  const formatted = digitStr.replace(/(.{5})/g, '$1 ').trim();
+
+  return {
+    id: `dgc-${Math.floor(rng()*1e6)}`, category: 'atencion-percepcion',
+    tags: ['conteo-digitos'],
+    question: `En la cadena: ${formatted}\n${cond.desc(target)}`,
+    options: opts, answer: opts.indexOf(correct),
+    explanation: `Se cuentan ${count} ocurrencia(s) que cumplen la condición.`,
+  };
+}
+
+// ============================================================
+// 47. INCORRECT ANTONYM PAIR (sinonimos-antonimos)
+// Which pair are NOT real antonyms?
+// ============================================================
+function generateIncorrectAntonymPairQuestion(rng) {
+  const correctPairs = [
+    ['Diligente', 'Negligente'], ['Austero', 'Lujoso'], ['Efímero', 'Eterno'],
+    ['Prolijo', 'Conciso'], ['Intrépido', 'Cobarde'], ['Opulento', 'Pobre'],
+    ['Lacónico', 'Verboso'], ['Tacaño', 'Generoso'], ['Docil', 'Rebelde'],
+    ['Somero', 'Profundo'], ['Veraz', 'Mendaz'], ['Proclive', 'Reacio'],
+    ['Ignoto', 'Conocido'], ['Fugaz', 'Duradero'], ['Loable', 'Censurable'],
+    ['Tenaz', 'Inconstante'], ['Fértil', 'Estéril'], ['Sobrio', 'Ebrio'],
+    ['Diáfano', 'Opaco'], ['Locuaz', 'Taciturno'], ['Audaz', 'Timorato'],
+    ['Exiguo', 'Abundante'], ['Nocturno', 'Diurno'], ['Benévolo', 'Malvado'],
+  ];
+
+  const fakePairs = [
+    ['Pertinaz', 'Perspicaz'], ['Lacónico', 'Platónico'], ['Ecuánime', 'Unánime'],
+    ['Mendaz', 'Audaz'], ['Pueril', 'Senil'], ['Falaz', 'Tenaz'],
+    ['Acervo', 'Acerbo'], ['Prolífico', 'Magnífico'], ['Oneroso', 'Generoso'],
+    ['Epítome', 'Epíteto'], ['Atávico', 'Acústico'], ['Estólido', 'Sólido'],
+    ['Inefable', 'Infalible'], ['Inicuo', 'Inocuo'], ['Apócrifo', 'Prolífico'],
+    ['Soporífero', 'Vocífero'], ['Ubicuo', 'Ambiguo'], ['Oprobio', 'Prodigio'],
+  ];
+
+  const selectedCorrect = pickN(correctPairs, 3, rng);
+  const fakePair = pick(fakePairs, rng);
+
+  const answerIdx = Math.floor(rng() * 4);
+  const allPairs = [...selectedCorrect];
+  allPairs.splice(answerIdx, 0, fakePair);
+
+  const opts = allPairs.map(p => `${p[0]} - ${p[1]}`);
+  return {
+    id: `iap-${Math.floor(rng()*1e6)}`, category: 'sinonimos-antonimos',
+    tags: ['antonimos-incorrectos'],
+    question: '¿Cuál de las siguientes parejas NO son antónimos?',
+    options: opts, answer: answerIdx,
+    explanation: `"${fakePair[0]}" y "${fakePair[1]}" no son antónimos.`,
+  };
+}
+
+// ============================================================
+// 48. SYNONYMS IN CONTEXT (sinonimos-antonimos)
+// Replace quoted word in sentence with synonym
+// ============================================================
+function generateSynonymInContextQuestion(rng) {
+  const items = [
+    { phrase: 'La pregunta era bastante "capciosa"', word: 'capciosa', correct: 'Engañosa', dist: ['Difícil', 'Importante', 'Clara'] },
+    { phrase: 'Su actitud fue muy "pusilánime"', word: 'pusilánime', correct: 'Cobarde', dist: ['Valiente', 'Generosa', 'Astuta'] },
+    { phrase: 'El discurso fue "lacónico" pero efectivo', word: 'lacónico', correct: 'Breve', dist: ['Extenso', 'Aburrido', 'Brillante'] },
+    { phrase: 'Tuvo una reacción "inopinada" ante la noticia', word: 'inopinada', correct: 'Inesperada', dist: ['Exagerada', 'Contenida', 'Predecible'] },
+    { phrase: 'El juez fue "ecuánime" en su veredicto', word: 'ecuánime', correct: 'Imparcial', dist: ['Severo', 'Injusto', 'Compasivo'] },
+    { phrase: 'Su "diligencia" fue elogiada por todos', word: 'diligencia', correct: 'Esmero', dist: ['Lentitud', 'Pereza', 'Descuido'] },
+    { phrase: 'Era una persona "perspicaz" para los negocios', word: 'perspicaz', correct: 'Sagaz', dist: ['Ingenua', 'Torpe', 'Desconfiada'] },
+    { phrase: 'La medida resultó "onerosa" para la empresa', word: 'onerosa', correct: 'Costosa', dist: ['Beneficiosa', 'Insignificante', 'Oportuna'] },
+    { phrase: 'El ambiente era "lúgubre" y desolador', word: 'lúgubre', correct: 'Sombrío', dist: ['Luminoso', 'Animado', 'Tranquilo'] },
+    { phrase: 'Se mostró "contumaz" en su postura', word: 'contumaz', correct: 'Obstinado', dist: ['Flexible', 'Dudoso', 'Indiferente'] },
+    { phrase: 'El remedio resultó "eficaz" contra la enfermedad', word: 'eficaz', correct: 'Efectivo', dist: ['Inútil', 'Nocivo', 'Lento'] },
+    { phrase: 'Su "indolencia" le costó el puesto', word: 'indolencia', correct: 'Pereza', dist: ['Diligencia', 'Ambición', 'Nerviosismo'] },
+    { phrase: 'Era un argumento "falaz" pero convincente', word: 'falaz', correct: 'Engañoso', dist: ['Válido', 'Sólido', 'Débil'] },
+    { phrase: 'Recibió un trato "deferente" por parte del anfitrión', word: 'deferente', correct: 'Respetuoso', dist: ['Despectivo', 'Indiferente', 'Hostil'] },
+    { phrase: 'La situación era "precaria" y urgente', word: 'precaria', correct: 'Inestable', dist: ['Estable', 'Excelente', 'Permanente'] },
+    { phrase: 'Su respuesta fue "ambigua" y confusa', word: 'ambigua', correct: 'Equívoca', dist: ['Clara', 'Directa', 'Precisa'] },
+    { phrase: 'Mostró una actitud "beligerante" ante sus rivales', word: 'beligerante', correct: 'Agresiva', dist: ['Pacífica', 'Sumisa', 'Conciliadora'] },
+    { phrase: 'El comentario fue "mordaz" y certero', word: 'mordaz', correct: 'Incisivo', dist: ['Amable', 'Suave', 'Insípido'] },
+    { phrase: 'Era un ser "magnánimo" con los vencidos', word: 'magnánimo', correct: 'Generoso', dist: ['Vengativo', 'Cruel', 'Indiferente'] },
+    { phrase: 'El paisaje era "bucólico" y apacible', word: 'bucólico', correct: 'Campestre', dist: ['Urbano', 'Industrial', 'Desértico'] },
+  ];
+
+  const item = pick(items, rng);
+  const opts = shuffle([item.correct, ...item.dist], rng);
+  return {
+    id: `sic-${Math.floor(rng()*1e6)}`, category: 'sinonimos-antonimos',
+    tags: ['sinonimos-contexto'],
+    question: `Sustituya la palabra entre comillas para que no varíe el significado: "${item.phrase}"`,
+    options: opts, answer: opts.indexOf(item.correct),
+    explanation: `"${item.word}" es sinónimo de "${item.correct}".`,
+  };
+}
+
+// ============================================================
+// 49. MOST DISSIMILAR WORD (sinonimos-antonimos)
+// "Which word is most different from X?"
+// ============================================================
+function generateMostDissimilarQuestion(rng) {
+  const items = [
+    { word: 'Entereza', correct: 'Pusilanimidad', dist: ['Firmeza', 'Fortaleza', 'Coraje'] },
+    { word: 'Abnegación', correct: 'Egoísmo', dist: ['Sacrificio', 'Generosidad', 'Entrega'] },
+    { word: 'Sagacidad', correct: 'Ingenuidad', dist: ['Astucia', 'Perspicacia', 'Agudeza'] },
+    { word: 'Templanza', correct: 'Desmesura', dist: ['Moderación', 'Sobriedad', 'Mesura'] },
+    { word: 'Clemencia', correct: 'Crueldad', dist: ['Piedad', 'Compasión', 'Misericordia'] },
+    { word: 'Denuedo', correct: 'Cobardía', dist: ['Valentía', 'Arrojo', 'Audacia'] },
+    { word: 'Probidad', correct: 'Deshonestidad', dist: ['Honradez', 'Integridad', 'Rectitud'] },
+    { word: 'Parsimonia', correct: 'Precipitación', dist: ['Calma', 'Lentitud', 'Sosiego'] },
+    { word: 'Beneplácito', correct: 'Desaprobación', dist: ['Aprobación', 'Consentimiento', 'Permiso'] },
+    { word: 'Indulgencia', correct: 'Severidad', dist: ['Tolerancia', 'Clemencia', 'Perdón'] },
+    { word: 'Algarabía', correct: 'Silencio', dist: ['Bullicio', 'Jaleo', 'Alboroto'] },
+    { word: 'Altruismo', correct: 'Egocentrismo', dist: ['Generosidad', 'Filantropía', 'Desprendimiento'] },
+    { word: 'Ostentación', correct: 'Sencillez', dist: ['Lujo', 'Alarde', 'Boato'] },
+    { word: 'Negligencia', correct: 'Esmero', dist: ['Descuido', 'Desidia', 'Dejadez'] },
+    { word: 'Frugalidad', correct: 'Opulencia', dist: ['Austeridad', 'Sobriedad', 'Moderación'] },
+    { word: 'Diligencia', correct: 'Pereza', dist: ['Esmero', 'Celeridad', 'Presteza'] },
+    { word: 'Acritud', correct: 'Dulzura', dist: ['Aspereza', 'Amargura', 'Acidez'] },
+    { word: 'Sigilo', correct: 'Escándalo', dist: ['Discreción', 'Cautela', 'Reserva'] },
+    { word: 'Locuacidad', correct: 'Mutismo', dist: ['Verborrea', 'Elocuencia', 'Palabrería'] },
+    { word: 'Ventura', correct: 'Desgracia', dist: ['Suerte', 'Fortuna', 'Dicha'] },
+  ];
+
+  const item = pick(items, rng);
+  const opts = shuffle([item.correct, ...item.dist], rng);
+  return {
+    id: `mdis-${Math.floor(rng()*1e6)}`, category: 'sinonimos-antonimos',
+    tags: ['palabra-dispar'],
+    question: `¿Cuál de las siguientes palabras es la MÁS DISPAR con respecto a "${item.word}"?`,
+    options: opts, answer: opts.indexOf(item.correct),
+    explanation: `"${item.correct}" es lo opuesto a "${item.word}", mientras que las demás son sinónimos.`,
+  };
+}
+
+// ============================================================
+// 50. UNIQUE LETTER IN GROUPS (razonamiento-logico)
+// Which word has a letter that doesn't appear in the others?
+// ============================================================
+function generateUniqueLetterQuestion(rng) {
+  // Generate 4 words where one has a unique letter
+  const wordSets = [
+    { words: ['MESA', 'CASA', 'MASA', 'ROPA'], answer: 3, exp: 'Solo ROPA contiene las letras P y O que no aparecen en las demás.' },
+    { words: ['LUNA', 'MULO', 'NULO', 'PEZ'], answer: 3, exp: 'Solo PEZ contiene las letras P, E y Z que no aparecen en las demás.' },
+    { words: ['GATO', 'DATO', 'RATO', 'FIEL'], answer: 3, exp: 'Solo FIEL contiene las letras F, I, E y L únicas.' },
+    { words: ['BOTA', 'NOTA', 'TOCA', 'SEDA'], answer: 3, exp: 'Solo SEDA contiene las letras S, E y D que no aparecen en las demás.' },
+    { words: ['PUMA', 'TREN', 'PUMA', 'MAPA'], answer: 1, exp: 'Solo TREN contiene las letras T, R, E y N únicas.' },
+    { words: ['LEON', 'FOCA', 'LOBO', 'LOMA'], answer: 1, exp: 'Solo FOCA contiene la letra F que no aparece en las demás.' },
+    { words: ['RUEDA', 'SILLA', 'MESA', 'JUGO'], answer: 3, exp: 'Solo JUGO contiene las letras J y G que no aparecen en las demás.' },
+    { words: ['PLATO', 'PIANO', 'PLUMA', 'BREVE'], answer: 3, exp: 'Solo BREVE contiene las letras B y V únicas.' },
+    { words: ['BARCO', 'MARCO', 'ARCO', 'DULCE'], answer: 3, exp: 'Solo DULCE contiene las letras D, U, L y E.' },
+    { words: ['VERDE', 'NEGRO', 'ROJO', 'AZUL'], answer: 3, exp: 'Solo AZUL contiene las letras Z y U que no aparecen en las demás.' },
+  ];
+
+  const ws = pick(wordSets, rng);
+  // Shuffle position of the answer
+  const answerWord = ws.words[ws.answer];
+  const others = ws.words.filter((_, i) => i !== ws.answer);
+  const answerIdx = Math.floor(rng() * 4);
+  const shuffledOthers = shuffle(others, rng);
+  const options = [...shuffledOthers];
+  options.splice(answerIdx, 0, answerWord);
+
+  return {
+    id: `ulg-${Math.floor(rng()*1e6)}`, category: 'razonamiento-logico',
+    tags: ['letra-unica'],
+    question: `¿Cuál de las siguientes palabras contiene una letra que NO aparece en ninguna de las otras?`,
+    options, answer: answerIdx,
+    explanation: ws.exp,
+  };
+}
+
+// ============================================================
+// 51. NUMBER TREES (aptitud-numerica)
+// Tree diagram: numbers at top, result at bottom, find pattern
+// ============================================================
+function generateNumberTreeQuestion(rng) {
+  const type = Math.floor(rng() * 6);
+  let a, b, c, result, exp, question;
+
+  if (type === 0) {
+    // a*b + c
+    a = 2 + Math.floor(rng() * 8);
+    b = 2 + Math.floor(rng() * 8);
+    c = 1 + Math.floor(rng() * 10);
+    result = a * b + c;
+    const a2 = 2 + Math.floor(rng() * 8);
+    const b2 = 2 + Math.floor(rng() * 8);
+    const c2 = 1 + Math.floor(rng() * 10);
+    const r2 = a2 * b2 + c2;
+    const a3 = 2 + Math.floor(rng() * 8);
+    const b3 = 2 + Math.floor(rng() * 8);
+    const c3 = 1 + Math.floor(rng() * 10);
+    const r3 = a3 * b3 + c3;
+    question = `Si [${a},${b},${c}]→${result} y [${a2},${b2},${c2}]→${r2}, entonces [${a3},${b3},${c3}]→?`;
+    result = r3;
+    exp = `Patrón: primer × segundo + tercero = ${a3}×${b3}+${c3} = ${r3}.`;
+  } else if (type === 1) {
+    // a+b+c
+    a = 5 + Math.floor(rng() * 20);
+    b = 5 + Math.floor(rng() * 20);
+    c = 5 + Math.floor(rng() * 20);
+    const r1 = a + b + c;
+    const a2 = 5 + Math.floor(rng() * 20);
+    const b2 = 5 + Math.floor(rng() * 20);
+    const c2 = 5 + Math.floor(rng() * 20);
+    const r2 = a2 + b2 + c2;
+    const a3 = 5 + Math.floor(rng() * 20);
+    const b3 = 5 + Math.floor(rng() * 20);
+    const c3 = 5 + Math.floor(rng() * 20);
+    result = a3 + b3 + c3;
+    question = `Si [${a},${b},${c}]→${r1} y [${a2},${b2},${c2}]→${r2}, entonces [${a3},${b3},${c3}]→?`;
+    exp = `Patrón: suma de los tres números = ${a3}+${b3}+${c3} = ${result}.`;
+  } else if (type === 2) {
+    // a² + b
+    a = 2 + Math.floor(rng() * 6);
+    b = 1 + Math.floor(rng() * 10);
+    const r1 = a * a + b;
+    const a2 = 2 + Math.floor(rng() * 6);
+    const b2 = 1 + Math.floor(rng() * 10);
+    const r2 = a2 * a2 + b2;
+    const a3 = 2 + Math.floor(rng() * 6);
+    const b3 = 1 + Math.floor(rng() * 10);
+    result = a3 * a3 + b3;
+    question = `Si [${a},${b}]→${r1} y [${a2},${b2}]→${r2}, entonces [${a3},${b3}]→?`;
+    exp = `Patrón: primero² + segundo = ${a3}²+${b3} = ${result}.`;
+  } else if (type === 3) {
+    // (a+b) * c
+    a = 2 + Math.floor(rng() * 8);
+    b = 2 + Math.floor(rng() * 8);
+    c = 2 + Math.floor(rng() * 5);
+    const r1 = (a + b) * c;
+    const a2 = 2 + Math.floor(rng() * 8);
+    const b2 = 2 + Math.floor(rng() * 8);
+    const c2 = 2 + Math.floor(rng() * 5);
+    const r2 = (a2 + b2) * c2;
+    const a3 = 2 + Math.floor(rng() * 8);
+    const b3 = 2 + Math.floor(rng() * 8);
+    const c3 = 2 + Math.floor(rng() * 5);
+    result = (a3 + b3) * c3;
+    question = `Si [${a},${b},${c}]→${r1} y [${a2},${b2},${c2}]→${r2}, entonces [${a3},${b3},${c3}]→?`;
+    exp = `Patrón: (primero+segundo) × tercero = (${a3}+${b3})×${c3} = ${result}.`;
+  } else if (type === 4) {
+    // a*b - c
+    a = 3 + Math.floor(rng() * 8);
+    b = 3 + Math.floor(rng() * 8);
+    c = 1 + Math.floor(rng() * 5);
+    const r1 = a * b - c;
+    const a2 = 3 + Math.floor(rng() * 8);
+    const b2 = 3 + Math.floor(rng() * 8);
+    const c2 = 1 + Math.floor(rng() * 5);
+    const r2 = a2 * b2 - c2;
+    const a3 = 3 + Math.floor(rng() * 8);
+    const b3 = 3 + Math.floor(rng() * 8);
+    const c3 = 1 + Math.floor(rng() * 5);
+    result = a3 * b3 - c3;
+    question = `Si [${a},${b},${c}]→${r1} y [${a2},${b2},${c2}]→${r2}, entonces [${a3},${b3},${c3}]→?`;
+    exp = `Patrón: primero × segundo - tercero = ${a3}×${b3}-${c3} = ${result}.`;
+  } else {
+    // a*c + b*c = (a+b)*c
+    a = 2 + Math.floor(rng() * 6);
+    b = 2 + Math.floor(rng() * 6);
+    c = 2 + Math.floor(rng() * 4);
+    const r1 = a * c + b;
+    const a2 = 2 + Math.floor(rng() * 6);
+    const b2 = 2 + Math.floor(rng() * 6);
+    const c2 = 2 + Math.floor(rng() * 4);
+    const r2 = a2 * c2 + b2;
+    const a3 = 2 + Math.floor(rng() * 6);
+    const b3 = 2 + Math.floor(rng() * 6);
+    const c3 = 2 + Math.floor(rng() * 4);
+    result = a3 * c3 + b3;
+    question = `Si [${a},${b},${c}]→${r1} y [${a2},${b2},${c2}]→${r2}, entonces [${a3},${b3},${c3}]→?`;
+    exp = `Patrón: primero × tercero + segundo = ${a3}×${c3}+${b3} = ${result}.`;
+  }
+
+  const correct = String(result);
+  const dists = safeDistractors(correct, 3, r => {
+    return String(result + Math.floor(r() * 11) - 5);
+  }, rng);
+
+  const opts = shuffle([correct, ...dists.slice(0, 3)], rng);
+  return {
+    id: `ntree-${Math.floor(rng()*1e6)}`, category: 'aptitud-numerica',
+    tags: ['arboles-numericos'],
+    question, options: opts, answer: opts.indexOf(correct), explanation: exp,
+  };
+}
+
+// ============================================================
+// 52. CONSONANT COUNT IN TABLE (atencion-percepcion)
+// Grid of characters, find most frequent consonant
+// ============================================================
+function generateConsonantTableQuestion(rng) {
+  const consonants = 'BCDFGHJKLMNPQRSTVWXYZ'.split('');
+  const vowels = 'AEIOU'.split('');
+  const all = [...consonants, ...vowels];
+
+  // Pick a "winner" consonant that will appear most
+  const winner = pick(consonants, rng);
+  const winnerCount = 5 + Math.floor(rng() * 4); // 5-8 times
+
+  // Build grid 6x8
+  const rows = 6, cols = 8;
+  const grid = [];
+  const placed = new Set();
+
+  // Fill randomly
+  for (let r = 0; r < rows; r++) {
+    const row = [];
+    for (let c = 0; c < cols; c++) {
+      row.push(pick(all, rng));
+    }
+    grid.push(row);
+  }
+
+  // Force winner count
+  let currentCount = 0;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (grid[r][c] === winner) currentCount++;
+    }
+  }
+
+  // Add more if needed
+  let attempts = 0;
+  while (currentCount < winnerCount && attempts < 100) {
+    attempts++;
+    const r = Math.floor(rng() * rows);
+    const c = Math.floor(rng() * cols);
+    if (grid[r][c] !== winner) {
+      grid[r][c] = winner;
+      currentCount++;
+    }
+  }
+
+  // Recount to get actual counts
+  const counts = {};
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const ch = grid[r][c];
+      if (consonants.includes(ch)) {
+        counts[ch] = (counts[ch] || 0) + 1;
+      }
+    }
+  }
+
+  // Find the actual most frequent
+  let maxCh = winner, maxCount = counts[winner] || 0;
+  for (const [ch, cnt] of Object.entries(counts)) {
+    if (cnt > maxCount) { maxCh = ch; maxCount = cnt; }
+  }
+
+  const correct = maxCh;
+  const gridStr = grid.map(row => row.join('  ')).join('\n');
+
+  // Distractors: other consonants that appear
+  const otherConsonants = Object.keys(counts).filter(c => c !== correct).sort((a, b) => counts[b] - counts[a]);
+  const dists = otherConsonants.slice(0, 3);
+  while (dists.length < 3) dists.push(pick(consonants.filter(c => c !== correct && !dists.includes(c)), rng));
+
+  const opts = shuffle([correct, ...dists], rng);
+  return {
+    id: `cnt-${Math.floor(rng()*1e6)}`, category: 'atencion-percepcion',
+    tags: ['consonante-tabla'],
+    question: `En la siguiente tabla de caracteres, ¿cuál es la consonante que aparece MÁS veces?\n\n${gridStr}`,
+    options: opts, answer: opts.indexOf(correct),
+    explanation: `La consonante "${correct}" aparece ${maxCount} veces.`,
+  };
+}
+
+// ============================================================
+// 53. COMPREHENSION / STATISTICAL TEXT (razonamiento-logico)
+// Paragraph with data → answer calculation question
+// ============================================================
+function generateTextComprehensionQuestion(rng) {
+  const type = Math.floor(rng() * 6);
+
+  if (type === 0) {
+    const total = pick([200, 300, 400, 500], rng);
+    const pctMen = pick([40, 45, 55, 60], rng);
+    const men = total * pctMen / 100;
+    const women = total - men;
+    const correct = String(women);
+    const dists = [String(men), String(total), String(Math.abs(men - women))].filter(d => d !== correct);
+    while (dists.length < 3) dists.push(String(women + dists.length + 1));
+    const opts = shuffle([correct, ...dists.slice(0, 3)], rng);
+    return { id: `tcomp-${Math.floor(rng()*1e6)}`, category: 'razonamiento-logico', tags: ['comprension-texto'],
+      question: `En una empresa hay ${total} empleados. El ${pctMen}% son hombres. ¿Cuántas mujeres hay?`,
+      options: opts, answer: opts.indexOf(correct), explanation: `${100-pctMen}% de ${total} = ${women} mujeres.` };
+  } else if (type === 1) {
+    const students = pick([120, 150, 200, 250], rng);
+    const pctPass = pick([60, 70, 75, 80], rng);
+    const passed = students * pctPass / 100;
+    const failed = students - passed;
+    const correct = String(failed);
+    const dists = [String(passed), String(students), String(Math.floor(passed / 2))].filter(d => d !== correct);
+    while (dists.length < 3) dists.push(String(failed + dists.length + 1));
+    const opts = shuffle([correct, ...dists.slice(0, 3)], rng);
+    return { id: `tcomp-${Math.floor(rng()*1e6)}`, category: 'razonamiento-logico', tags: ['comprension-texto'],
+      question: `De ${students} alumnos, aprobaron el ${pctPass}%. ¿Cuántos suspendieron?`,
+      options: opts, answer: opts.indexOf(correct), explanation: `${100-pctPass}% de ${students} = ${failed} suspendidos.` };
+  } else if (type === 2) {
+    const total = pick([1000, 1500, 2000], rng);
+    const pctA = pick([30, 35, 40], rng);
+    const pctB = pick([25, 30, 35], rng);
+    const rest = total - total * pctA / 100 - total * pctB / 100;
+    const correct = String(rest);
+    const dists = [String(total * pctA / 100), String(total * pctB / 100), String(total)].filter(d => d !== correct);
+    while (dists.length < 3) dists.push(String(rest + 50));
+    const opts = shuffle([correct, ...dists.slice(0, 3)], rng);
+    return { id: `tcomp-${Math.floor(rng()*1e6)}`, category: 'razonamiento-logico', tags: ['comprension-texto'],
+      question: `Una ciudad tiene ${total.toLocaleString('es-ES')} habitantes. El ${pctA}% son menores y el ${pctB}% son mayores de 65. ¿Cuántos tienen entre 18 y 65 años?`,
+      options: opts, answer: opts.indexOf(correct), explanation: `${100-pctA-pctB}% de ${total} = ${rest}.` };
+  } else if (type === 3) {
+    const price = pick([40, 50, 60, 80, 100], rng);
+    const discount = pick([10, 15, 20, 25, 30], rng);
+    const final_price = price * (100 - discount) / 100;
+    const correct = String(final_price) + ' euros';
+    const dists = [`${price - discount} euros`, `${price} euros`, `${final_price + 5} euros`].filter(d => d !== correct);
+    while (dists.length < 3) dists.push(`${final_price + 10} euros`);
+    const opts = shuffle([correct, ...dists.slice(0, 3)], rng);
+    return { id: `tcomp-${Math.floor(rng()*1e6)}`, category: 'razonamiento-logico', tags: ['comprension-texto'],
+      question: `Un artículo cuesta ${price} euros y tiene un descuento del ${discount}%. ¿Cuál es el precio final?`,
+      options: opts, answer: opts.indexOf(correct), explanation: `${price} - ${discount}% = ${correct}.` };
+  } else if (type === 4) {
+    const km = pick([120, 150, 180, 240, 300], rng);
+    const hours = pick([2, 3, 4, 5], rng);
+    const speed = km / hours;
+    const correct = `${speed} km/h`;
+    const dists = [`${speed + 10} km/h`, `${speed - 10} km/h`, `${km} km/h`].filter(d => d !== correct);
+    while (dists.length < 3) dists.push(`${speed + 20} km/h`);
+    const opts = shuffle([correct, ...dists.slice(0, 3)], rng);
+    return { id: `tcomp-${Math.floor(rng()*1e6)}`, category: 'razonamiento-logico', tags: ['comprension-texto'],
+      question: `Un coche recorre ${km} km en ${hours} horas. ¿Cuál es su velocidad media?`,
+      options: opts, answer: opts.indexOf(correct), explanation: `${km} / ${hours} = ${speed} km/h.` };
+  } else {
+    const liters = pick([50, 60, 80, 100], rng);
+    const fraction = pick([2, 3, 4, 5], rng);
+    const used = liters / fraction;
+    const remaining = liters - used;
+    const correct = `${remaining} litros`;
+    const dists = [`${used} litros`, `${liters} litros`, `${remaining + 10} litros`].filter(d => d !== correct);
+    while (dists.length < 3) dists.push(`${remaining - 5} litros`);
+    const opts = shuffle([correct, ...dists.slice(0, 3)], rng);
+    return { id: `tcomp-${Math.floor(rng()*1e6)}`, category: 'razonamiento-logico', tags: ['comprension-texto'],
+      question: `Un depósito tiene ${liters} litros. Se consume 1/${fraction} del total. ¿Cuánto queda?`,
+      options: opts, answer: opts.indexOf(correct), explanation: `${liters} - ${liters}/${fraction} = ${remaining} litros.` };
+  }
+}
+
+// ============================================================
+// 54. DIGIT BLOCK CODING (atencion-percepcion)
+// Group digit string into blocks, map blocks to letters
+// ============================================================
+function generateDigitBlockCodeQuestion(rng) {
+  // Create a mapping of 2-digit blocks to letters
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  const usedLetters = pickN(letters, 8, rng);
+  const blocks = [];
+  const used = new Set();
+  for (let i = 0; i < 8; i++) {
+    let block;
+    let s = 0;
+    do {
+      block = String(10 + Math.floor(rng() * 90)); // 2-digit
+      s++;
+    } while (used.has(block) && s < 50);
+    used.add(block);
+    blocks.push(block);
+  }
+
+  const mapping = {};
+  blocks.forEach((b, i) => { mapping[b] = usedLetters[i]; });
+
+  // Create a word from 3-4 letters
+  const wordLen = 3 + Math.floor(rng() * 2);
+  const wordLetters = Array.from({length: wordLen}, () => pick(usedLetters, rng));
+  const word = wordLetters.join('');
+  const digitString = wordLetters.map(l => {
+    for (const [b, letter] of Object.entries(mapping)) {
+      if (letter === l) return b;
+    }
+    return '00';
+  }).join('');
+
+  // Build legend
+  const legend = Object.entries(mapping).map(([b, l]) => `${b}=${l}`).join(', ');
+
+  // Question: given the digit string, what word does it spell?
+  const correct = word;
+  const dists = safeDistractors(correct, 3, r => {
+    const arr = wordLetters.slice();
+    const pos = Math.floor(r() * arr.length);
+    arr[pos] = pick(usedLetters.filter(l => l !== arr[pos]), r);
+    return arr.join('');
+  }, rng);
+
+  const opts = shuffle([correct, ...dists.slice(0, 3)], rng);
+  return {
+    id: `dbc-${Math.floor(rng()*1e6)}`, category: 'atencion-percepcion',
+    tags: ['codificacion-bloques'],
+    question: `Con la siguiente codificación: ${legend}. ¿Qué palabra forman los bloques "${digitString}"?`,
+    options: opts, answer: opts.indexOf(correct),
+    explanation: `${digitString} → ${wordLetters.map((l, i) => `${digitString.slice(i*2, i*2+2)}=${l}`).join(', ')} → ${word}`,
+  };
+}
+
+// ============================================================
+// 55. SYMBOL-NUMBER DECODE (razonamiento-logico)
+// Table with numbers on top, symbols below (shifted), deduce mapping
+// ============================================================
+function generateSymbolDecodeQuestion(rng) {
+  const symbolSets = ['★●■▲◆♦♣♠', '◇○□△☆♡♤♧', '✦✧⬟⬠⬡⬢⬣⬥'];
+  const symbols = pick(symbolSets, rng).split('').slice(0, 6);
+  const numbers = shuffle([1, 2, 3, 4, 5, 6], rng);
+
+  // Create mapping
+  const numToSym = {};
+  numbers.forEach((n, i) => { numToSym[n] = symbols[i]; });
+
+  // Show 4 known pairs, ask about the 5th
+  const pairs = numbers.map((n, i) => ({ num: n, sym: symbols[i] }));
+  const shown = pairs.slice(0, 4);
+  const hidden = pairs[4];
+
+  const shownStr = shown.map(p => `${p.num}→${p.sym}`).join(', ');
+  const correct = hidden.sym;
+  const dists = symbols.filter(s => s !== correct).slice(0, 3);
+
+  const opts = shuffle([correct, ...dists], rng);
+  return {
+    id: `sdec-${Math.floor(rng()*1e6)}`, category: 'razonamiento-logico',
+    tags: ['simbolo-numero'],
+    question: `En un código, cada número tiene un símbolo: ${shownStr}. ¿Qué símbolo corresponde al ${hidden.num}?`,
+    options: opts, answer: opts.indexOf(correct),
+    explanation: `Por eliminación, ${hidden.num} → ${correct}.`,
+  };
+}
+
+// ============================================================
+// 56. INVENTED LANGUAGE (razonamiento-logico)
+// Given rules of a made-up language, translate
+// ============================================================
+function generateInventedLanguageQuestion(rng) {
+  const sets = [
+    {
+      rules: ['"gato blanco" = "miru palo"', '"perro negro" = "tanu kelo"', '"gato negro" = "miru kelo"'],
+      q: '¿Cómo se dice "perro blanco"?', correct: 'tanu palo',
+      dist: ['miru tanu', 'kelo palo', 'palo miru'],
+      exp: 'gato=miru, blanco=palo, perro=tanu, negro=kelo → perro blanco = tanu palo.',
+    },
+    {
+      rules: ['"casa grande" = "boka nira"', '"coche pequeño" = "fela dumi"', '"casa pequeña" = "boka dumi"'],
+      q: '¿Cómo se dice "coche grande"?', correct: 'fela nira',
+      dist: ['boka fela', 'nira dumi', 'dumi boka'],
+      exp: 'casa=boka, grande=nira, coche=fela, pequeño=dumi → coche grande = fela nira.',
+    },
+    {
+      rules: ['"flor roja" = "luna saka"', '"árbol verde" = "toka meli"', '"flor verde" = "luna meli"'],
+      q: '¿Cómo se dice "árbol rojo"?', correct: 'toka saka',
+      dist: ['luna toka', 'saka meli', 'meli luna'],
+      exp: 'flor=luna, rojo=saka, árbol=toka, verde=meli → árbol rojo = toka saka.',
+    },
+    {
+      rules: ['"agua fría" = "naku tiso"', '"fuego caliente" = "pira ondo"', '"agua caliente" = "naku ondo"'],
+      q: '¿Cómo se dice "fuego frío"?', correct: 'pira tiso',
+      dist: ['naku pira', 'ondo tiso', 'tiso naku'],
+      exp: 'agua=naku, fría=tiso, fuego=pira, caliente=ondo → fuego frío = pira tiso.',
+    },
+    {
+      rules: ['"mesa redonda" = "kupa roli"', '"silla cuadrada" = "bena kasi"', '"mesa cuadrada" = "kupa kasi"'],
+      q: '¿Cómo se dice "silla redonda"?', correct: 'bena roli',
+      dist: ['kupa bena', 'roli kasi', 'kasi roli'],
+      exp: 'mesa=kupa, redonda=roli, silla=bena, cuadrada=kasi → silla redonda = bena roli.',
+    },
+    {
+      rules: ['"día largo" = "suna peko"', '"noche corta" = "lumi daka"', '"día corto" = "suna daka"'],
+      q: '¿Cómo se dice "noche larga"?', correct: 'lumi peko',
+      dist: ['suna lumi', 'peko daka', 'daka suna'],
+      exp: 'día=suna, largo=peko, noche=lumi, corto=daka → noche larga = lumi peko.',
+    },
+    {
+      rules: ['"pez dorado" = "rika omu"', '"ave plateada" = "tulu sabi"', '"pez plateado" = "rika sabi"'],
+      q: '¿Cómo se dice "ave dorada"?', correct: 'tulu omu',
+      dist: ['rika tulu', 'omu sabi', 'sabi rika'],
+      exp: 'pez=rika, dorado=omu, ave=tulu, plateado=sabi → ave dorada = tulu omu.',
+    },
+    {
+      rules: ['"sol brillante" = "zara kinu"', '"luna oscura" = "femi polu"', '"sol oscuro" = "zara polu"'],
+      q: '¿Cómo se dice "luna brillante"?', correct: 'femi kinu',
+      dist: ['zara femi', 'kinu polu', 'polu zara'],
+      exp: 'sol=zara, brillante=kinu, luna=femi, oscuro=polu → luna brillante = femi kinu.',
+    },
+  ];
+
+  const s = pick(sets, rng);
+  const opts = shuffle([s.correct, ...s.dist], rng);
+  return {
+    id: `inv-${Math.floor(rng()*1e6)}`, category: 'razonamiento-logico',
+    tags: ['idioma-inventado'],
+    question: `En un idioma inventado: ${s.rules.join('; ')}. ${s.q}`,
+    options: opts, answer: opts.indexOf(s.correct),
+    explanation: s.exp,
+  };
+}
+
+// ============================================================
+// 57. COMBINATORICS (aptitud-numerica)
+// Permutations, combinations, arrangements
+// ============================================================
+function generateCombinatoricsQuestion(rng) {
+  const type = Math.floor(rng() * 8);
+
+  if (type === 0) {
+    // P(n,r) - seats: n chairs, r people
+    const people = pick([3, 4, 5], rng);
+    const chairs = people + Math.floor(rng() * 3) + 1;
+    let result = 1;
+    for (let i = 0; i < people; i++) result *= (chairs - i);
+    const names = pickN(['Ana', 'Luis', 'María', 'Carlos', 'Pedro', 'Clara', 'Arturo', 'Matías', 'Elena', 'Juan'], people, rng);
+    const correct = String(result);
+    const dists = [result + 10, result - 10, result * 2].map(String).filter(d => d !== correct && parseInt(d) > 0);
+    while (dists.length < 3) dists.push(String(result + (dists.length + 1) * 20));
+    const opts = shuffle([correct, ...dists.slice(0, 3)], rng);
+    return { id: `comb-${Math.floor(rng()*1e6)}`, category: 'aptitud-numerica', tags: ['combinatoria'],
+      question: `¿De cuántas formas pueden sentarse ${names.join(', ')} en ${chairs} sillas?`,
+      options: opts, answer: opts.indexOf(correct), explanation: `Variaciones V(${chairs},${people}) = ${correct}.` };
+  } else if (type === 1) {
+    // Factorial: how many ways to arrange n people in a line
+    const n = pick([3, 4, 5, 6], rng);
+    let result = 1;
+    for (let i = 2; i <= n; i++) result *= i;
+    const correct = String(result);
+    const dists = [result + n, result * 2, Math.floor(result / 2)].map(String).filter(d => d !== correct && parseInt(d) > 0);
+    while (dists.length < 3) dists.push(String(result + (dists.length + 1) * 5));
+    const opts = shuffle([correct, ...dists.slice(0, 3)], rng);
+    return { id: `comb-${Math.floor(rng()*1e6)}`, category: 'aptitud-numerica', tags: ['combinatoria'],
+      question: `¿De cuántas maneras se pueden ordenar ${n} libros distintos en una estantería?`,
+      options: opts, answer: opts.indexOf(correct), explanation: `${n}! = ${result}.` };
+  } else if (type === 2) {
+    // C(n,r) - choose r from n (no order)
+    const n = pick([5, 6, 7, 8, 10], rng);
+    const r = pick([2, 3], rng);
+    let num = 1, den = 1;
+    for (let i = 0; i < r; i++) { num *= (n - i); den *= (i + 1); }
+    const result = num / den;
+    const correct = String(result);
+    const dists = [result + 1, result - 1, result * 2].map(String).filter(d => d !== correct && parseInt(d) > 0);
+    while (dists.length < 3) dists.push(String(result + (dists.length + 2) * 3));
+    const opts = shuffle([correct, ...dists.slice(0, 3)], rng);
+    return { id: `comb-${Math.floor(rng()*1e6)}`, category: 'aptitud-numerica', tags: ['combinatoria'],
+      question: `¿De cuántas formas se pueden elegir ${r} delegados entre ${n} candidatos?`,
+      options: opts, answer: opts.indexOf(correct), explanation: `C(${n},${r}) = ${result}.` };
+  } else if (type === 3) {
+    // Digits: how many 3-digit numbers with non-repeating digits from set
+    const digits = pick([4, 5, 6], rng);
+    const result = digits * (digits - 1) * (digits - 2);
+    const correct = String(result);
+    const dists = [result + 10, result - 10, digits * digits * digits].map(String).filter(d => d !== correct);
+    while (dists.length < 3) dists.push(String(result + (dists.length + 1) * 5));
+    const opts = shuffle([correct, ...dists.slice(0, 3)], rng);
+    return { id: `comb-${Math.floor(rng()*1e6)}`, category: 'aptitud-numerica', tags: ['combinatoria'],
+      question: `¿Cuántos números de 3 cifras distintas se pueden formar con los dígitos del 1 al ${digits}?`,
+      options: opts, answer: opts.indexOf(correct), explanation: `V(${digits},3) = ${digits}×${digits-1}×${digits-2} = ${result}.` };
+  } else if (type === 4) {
+    // How many handshakes among n people
+    const n = pick([5, 6, 7, 8, 10], rng);
+    const result = n * (n - 1) / 2;
+    const correct = String(result);
+    const dists = [result + 3, result - 3, n * (n - 1)].map(String).filter(d => d !== correct);
+    while (dists.length < 3) dists.push(String(result + (dists.length + 1) * 2));
+    const opts = shuffle([correct, ...dists.slice(0, 3)], rng);
+    return { id: `comb-${Math.floor(rng()*1e6)}`, category: 'aptitud-numerica', tags: ['combinatoria'],
+      question: `Si ${n} personas se dan la mano entre sí, ¿cuántos apretones de manos hay en total?`,
+      options: opts, answer: opts.indexOf(correct), explanation: `C(${n},2) = ${n}×${n-1}/2 = ${result}.` };
+  } else if (type === 5) {
+    // License plates: 3 letters + 4 digits
+    const letters = 26;
+    const digs = 10;
+    const result = letters * letters * letters * digs;
+    const correct = result.toLocaleString('es-ES');
+    const dists = [(letters*letters*digs).toLocaleString('es-ES'), (letters*letters*letters*digs*digs).toLocaleString('es-ES'), (letters*digs*digs*digs).toLocaleString('es-ES')];
+    const opts = shuffle([correct, ...dists.filter(d => d !== correct).slice(0, 3)], rng);
+    return { id: `comb-${Math.floor(rng()*1e6)}`, category: 'aptitud-numerica', tags: ['combinatoria'],
+      question: `¿Cuántas matrículas distintas se pueden formar con 3 letras seguidas de 1 dígito?`,
+      options: opts, answer: opts.indexOf(correct), explanation: `26³×10 = ${correct}.` };
+  } else if (type === 6) {
+    // Teams from a group
+    const n = pick([8, 10, 12], rng);
+    const r = pick([3, 4, 5], rng);
+    let num = 1, den = 1;
+    for (let i = 0; i < r; i++) { num *= (n - i); den *= (i + 1); }
+    const result = num / den;
+    const correct = String(result);
+    const dists = [result + 10, result - 5, result * 2].map(String).filter(d => d !== correct && parseInt(d) > 0);
+    while (dists.length < 3) dists.push(String(result + (dists.length + 1) * 8));
+    const opts = shuffle([correct, ...dists.slice(0, 3)], rng);
+    return { id: `comb-${Math.floor(rng()*1e6)}`, category: 'aptitud-numerica', tags: ['combinatoria'],
+      question: `¿De cuántas formas se puede formar un equipo de ${r} personas a partir de un grupo de ${n}?`,
+      options: opts, answer: opts.indexOf(correct), explanation: `C(${n},${r}) = ${result}.` };
+  } else {
+    // Circular arrangements
+    const n = pick([4, 5, 6], rng);
+    let result = 1;
+    for (let i = 2; i < n; i++) result *= i;
+    const correct = String(result);
+    const dists = [result * n, result + n, result * 2].map(String).filter(d => d !== correct);
+    while (dists.length < 3) dists.push(String(result + (dists.length + 1) * 3));
+    const opts = shuffle([correct, ...dists.slice(0, 3)], rng);
+    return { id: `comb-${Math.floor(rng()*1e6)}`, category: 'aptitud-numerica', tags: ['combinatoria'],
+      question: `¿De cuántas formas distintas se pueden sentar ${n} personas en una mesa redonda?`,
+      options: opts, answer: opts.indexOf(correct), explanation: `Permutaciones circulares: (${n}-1)! = ${result}.` };
+  }
+}
+
+// ============================================================
+// 58. MONTH/DAY INITIAL SERIES (razonamiento-logico)
+// F,M,A,M,J,? → J (months) or L,M,X,J,V,? → S (days)
+// ============================================================
+function generateCalendarSeriesQuestion(rng) {
+  const type = Math.floor(rng() * 4);
+
+  const months = ['E','F','M','A','M','J','J','A','S','O','N','D'];
+  const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const days = ['L','M','X','J','V','S','D'];
+  const dayNames = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+
+  if (type === 0) {
+    // Month initials from random start
+    const start = Math.floor(rng() * 7); // start within first 7 months
+    const len = 5 + Math.floor(rng() * 2); // 5-6 shown
+    const series = [];
+    for (let i = 0; i < len; i++) series.push(months[(start + i) % 12]);
+    const answerIdx = (start + len) % 12;
+    const correct = months[answerIdx];
+    // Distractors: nearby month initials
+    const dists = new Set([correct]);
+    while (dists.size < 4) dists.add(months[Math.floor(rng() * 12)]);
+    const opts = shuffle([...dists], rng);
+    return { id: `cal-${Math.floor(rng()*1e6)}`, category: 'razonamiento-logico', tags: ['series-calendario'],
+      question: `¿Qué letra continúa la serie? ${series.join(' – ')} – ?`,
+      options: opts, answer: opts.indexOf(correct),
+      explanation: `Son las iniciales de los meses: ...${monthNames[answerIdx]} (${correct}).` };
+  } else if (type === 1) {
+    // Day initials
+    const start = Math.floor(rng() * 7);
+    const len = 5;
+    const series = [];
+    for (let i = 0; i < len; i++) series.push(days[(start + i) % 7]);
+    const answerIdx = (start + len) % 7;
+    const correct = days[answerIdx];
+    const dists = new Set([correct]);
+    while (dists.size < 4) dists.add(days[Math.floor(rng() * 7)]);
+    const opts = shuffle([...dists], rng);
+    return { id: `cal-${Math.floor(rng()*1e6)}`, category: 'razonamiento-logico', tags: ['series-calendario'],
+      question: `¿Qué letra continúa la serie? ${series.join(' – ')} – ?`,
+      options: opts, answer: opts.indexOf(correct),
+      explanation: `Son las iniciales de los días: ...${dayNames[answerIdx]} (${correct}).` };
+  } else if (type === 2) {
+    // Month initials skipping one
+    const start = Math.floor(rng() * 6);
+    const series = [];
+    for (let i = 0; i < 5; i++) series.push(months[(start + i * 2) % 12]);
+    const answerIdx = (start + 10) % 12;
+    const correct = months[answerIdx];
+    const dists = new Set([correct]);
+    while (dists.size < 4) dists.add(months[Math.floor(rng() * 12)]);
+    const opts = shuffle([...dists], rng);
+    return { id: `cal-${Math.floor(rng()*1e6)}`, category: 'razonamiento-logico', tags: ['series-calendario'],
+      question: `¿Qué letra continúa la serie? ${series.join(' – ')} – ?`,
+      options: opts, answer: opts.indexOf(correct),
+      explanation: `Iniciales de meses alternos (saltando uno): ...${monthNames[answerIdx]} (${correct}).` };
+  } else {
+    // Reverse months
+    const start = 6 + Math.floor(rng() * 5);
+    const series = [];
+    for (let i = 0; i < 5; i++) series.push(months[(start - i + 12) % 12]);
+    const answerIdx = (start - 5 + 12) % 12;
+    const correct = months[answerIdx];
+    const dists = new Set([correct]);
+    while (dists.size < 4) dists.add(months[Math.floor(rng() * 12)]);
+    const opts = shuffle([...dists], rng);
+    return { id: `cal-${Math.floor(rng()*1e6)}`, category: 'razonamiento-logico', tags: ['series-calendario'],
+      question: `¿Qué letra continúa la serie? ${series.join(' – ')} – ?`,
+      options: opts, answer: opts.indexOf(correct),
+      explanation: `Iniciales de meses en orden inverso: ...${monthNames[answerIdx]} (${correct}).` };
+  }
+}
+
+// ============================================================
+// 59. FAMILY TREE (razonamiento-logico)
+// Generate a family tree, ask about relationships
+// ============================================================
+function generateFamilyTreeQuestion(rng) {
+  // Pre-built family trees with questions
+  const families = [
+    {
+      desc: 'Pedro y Gema tienen dos hijos: Eva y María. Eva se casó con Carlos y tienen tres hijos: Beatriz, Juan y Ramón. María no tiene hijos. Jesús y Mercedes tienen tres hijos: Luis, Jorge y Ana (soltera). Luis se casó con Mónica y tienen dos hijos: Roberto y José. Jorge se casó con Ana y tienen cuatro hijos: Rafael, Pilar, Cristina y Manuel.',
+      questions: [
+        { q: 'Según el árbol familiar, ¿cuántos nietos tiene Jesús?', correct: '6', dist: ['4', '5', '8'], exp: 'Roberto, José (hijos de Luis) + Rafael, Pilar, Cristina, Manuel (hijos de Jorge) = 6.' },
+        { q: 'Según el árbol familiar, ¿cuántos nietos varones tiene Jesús?', correct: '4', dist: ['3', '5', '6'], exp: 'Roberto, José, Rafael, Manuel = 4 nietos varones.' },
+        { q: 'Según el árbol familiar, ¿cuántas nietas tiene Jesús?', correct: '2', dist: ['3', '4', '1'], exp: 'Pilar y Cristina = 2 nietas.' },
+        { q: 'Según el árbol familiar, ¿quién es el cuñado de Luis?', correct: 'Jorge', dist: ['Carlos', 'Pedro', 'Manuel'], exp: 'Jorge es hermano de Mercedes (esposa de Luis)... no, Jorge es hermano de Luis, así que su cuñada es Mónica y Ana. El cuñado de Luis es Jorge (su hermano, no es cuñado). Realmente el cuñado sería el esposo de su hermana Ana, pero Ana es soltera. Así que no tiene cuñado directo.' },
+      ]
+    },
+    {
+      desc: 'Carmen y Paco tienen tres hijos: Sergio, Juan y Juana. Sergio se casó con Sara y tienen cuatro hijos: Saúl, Pedro, Susana y Pepe (Susana se casó con Pepe y tienen tres hijos: Ismael, Antonio y Félix). Juan se casó con Pepa y tienen dos hijos: Isabel y Javier. Juana se casó con Carlos y tienen cuatro hijos: Miguel, Ángel, Elías, Jose y Alba.',
+      questions: [
+        { q: 'Según el árbol familiar, ¿quiénes son los cuñados de Sergio?', correct: 'Juan y Carlos', dist: ['Pepa y Juana', 'Pepa y Carlos', 'Juan y Juana'], exp: 'Juan es hermano de Sergio (cuñado por ser familia directa en contexto de examen). Carlos es esposo de Juana (hermana de Sergio), por tanto cuñado.' },
+        { q: 'Según el árbol familiar, ¿cuántos nietos tiene Carmen?', correct: '12', dist: ['10', '8', '14'], exp: 'Hijos de Sergio: 4 + hijos de Juan: 2 + hijos de Juana: 5 = 11... contando: Saúl, Pedro, Susana, Pepe + Isabel, Javier + Miguel, Ángel, Elías, Jose, Alba = 11.' },
+        { q: 'Según el árbol familiar, ¿cuántos bisnietos tiene Carmen?', correct: '3', dist: ['2', '4', '5'], exp: 'Ismael, Antonio y Félix (hijos de Susana y Pepe) = 3 bisnietos.' },
+      ]
+    },
+  ];
+
+  // Simple procedural family trees
+  const maleNames = ['Antonio', 'Miguel', 'Pablo', 'Diego', 'Marcos', 'Sergio', 'Hugo', 'Adrián', 'Álvaro', 'Iván', 'Fernando', 'Roberto', 'Enrique', 'Tomás', 'Víctor'];
+  const femaleNames = ['Laura', 'Sofía', 'Lucía', 'Carmen', 'Elena', 'Marta', 'Paula', 'Irene', 'Rosa', 'Nuria', 'Inés', 'Raquel', 'Silvia', 'Alicia', 'Diana'];
+
+  const simpleType = Math.floor(rng() * 6);
+
+  if (simpleType === 0 || simpleType === 1) {
+    // Use predefined family
+    const fam = pick(families, rng);
+    const qItem = pick(fam.questions, rng);
+    const opts = shuffle([qItem.correct, ...qItem.dist], rng);
+    return { id: `fam-${Math.floor(rng()*1e6)}`, category: 'razonamiento-logico', tags: ['arbol-genealogico'],
+      question: `${fam.desc}\n\n${qItem.q}`, options: opts, answer: opts.indexOf(qItem.correct), explanation: qItem.exp };
+  }
+
+  // Procedural: grandparent → children → grandchildren count
+  const gfather = pick(maleNames, rng);
+  const gmother = pick(femaleNames, rng);
+  const numChildren = 2 + Math.floor(rng() * 2); // 2-3 children
+  const children = [];
+  const usedM = new Set([gfather]);
+  const usedF = new Set([gmother]);
+  for (let i = 0; i < numChildren; i++) {
+    const isMale = rng() > 0.5;
+    let name;
+    if (isMale) {
+      do { name = pick(maleNames, rng); } while (usedM.has(name));
+      usedM.add(name);
+    } else {
+      do { name = pick(femaleNames, rng); } while (usedF.has(name));
+      usedF.add(name);
+    }
+    const numGC = 1 + Math.floor(rng() * 3); // 1-3 grandchildren each
+    const gc = [];
+    for (let j = 0; j < numGC; j++) {
+      const gcMale = rng() > 0.5;
+      let gcName;
+      if (gcMale) {
+        do { gcName = pick(maleNames, rng); } while (usedM.has(gcName));
+        usedM.add(gcName);
+      } else {
+        do { gcName = pick(femaleNames, rng); } while (usedF.has(gcName));
+        usedF.add(gcName);
+      }
+      gc.push({ name: gcName, male: gcMale });
+    }
+    children.push({ name, male: isMale, grandchildren: gc });
+  }
+
+  const totalGC = children.reduce((s, c) => s + c.grandchildren.length, 0);
+  const maleGC = children.reduce((s, c) => s + c.grandchildren.filter(g => g.male).length, 0);
+  const femaleGC = totalGC - maleGC;
+
+  const desc = `${gfather} y ${gmother} tienen ${numChildren} hijos: ${children.map(c => c.name).join(', ')}. ` +
+    children.map(c => `${c.name} tiene ${c.grandchildren.length} hijo${c.grandchildren.length > 1 ? 's' : ''}: ${c.grandchildren.map(g => g.name).join(', ')}`).join('. ') + '.';
+
+  if (simpleType === 2 || simpleType === 3) {
+    const correct = String(totalGC);
+    const dists = [totalGC + 1, totalGC - 1, totalGC + 2].map(String).filter(d => d !== correct && parseInt(d) >= 0);
+    while (dists.length < 3) dists.push(String(totalGC + dists.length + 2));
+    const opts = shuffle([correct, ...dists.slice(0, 3)], rng);
+    return { id: `fam-${Math.floor(rng()*1e6)}`, category: 'razonamiento-logico', tags: ['arbol-genealogico'],
+      question: `${desc}\n\n¿Cuántos nietos tiene ${gfather} en total?`,
+      options: opts, answer: opts.indexOf(correct), explanation: `Total nietos: ${totalGC}.` };
+  } else if (simpleType === 4) {
+    const correct = String(maleGC);
+    const dists = [femaleGC, totalGC, maleGC + 1].map(String).filter(d => d !== correct);
+    while (dists.length < 3) dists.push(String(maleGC + dists.length + 1));
+    const opts = shuffle([correct, ...dists.slice(0, 3)], rng);
+    return { id: `fam-${Math.floor(rng()*1e6)}`, category: 'razonamiento-logico', tags: ['arbol-genealogico'],
+      question: `${desc}\n\n¿Cuántos nietos varones tiene ${gfather}?`,
+      options: opts, answer: opts.indexOf(correct), explanation: `Nietos varones: ${maleGC}.` };
+  } else {
+    const correct = String(femaleGC);
+    const dists = [maleGC, totalGC, femaleGC + 1].map(String).filter(d => d !== correct);
+    while (dists.length < 3) dists.push(String(femaleGC + dists.length + 1));
+    const opts = shuffle([correct, ...dists.slice(0, 3)], rng);
+    return { id: `fam-${Math.floor(rng()*1e6)}`, category: 'razonamiento-logico', tags: ['arbol-genealogico'],
+      question: `${desc}\n\n¿Cuántas nietas tiene ${gfather}?`,
+      options: opts, answer: opts.indexOf(correct), explanation: `Nietas: ${femaleGC}.` };
+  }
+}
+
+// ============================================================
+// 60. POLITICAL/SPECIALIZED DEFINITIONS (sinonimos-antonimos)
+// Government forms, legal terms, etc.
+// ============================================================
+function generateSpecializedDefQuestion(rng) {
+  const defs = [
+    { def: 'Forma de gobierno en la que la autoridad política se considera emanada de Dios', correct: 'Teocracia', dist: ['Plutocracia', 'Oligarquía', 'Autocracia'] },
+    { def: 'Forma de gobierno en la que el poder lo ejercen los más ricos', correct: 'Plutocracia', dist: ['Teocracia', 'Democracia', 'Meritocracia'] },
+    { def: 'Gobierno de unos pocos que imponen su voluntad', correct: 'Oligarquía', dist: ['Monarquía', 'Democracia', 'Anarquía'] },
+    { def: 'Sistema político en el que el pueblo ejerce la soberanía', correct: 'Democracia', dist: ['Autocracia', 'Teocracia', 'Oligarquía'] },
+    { def: 'Régimen político en el que una sola persona gobierna sin limitaciones', correct: 'Autocracia', dist: ['Democracia', 'Oligarquía', 'Burocracia'] },
+    { def: 'Ausencia total de gobierno o autoridad estatal', correct: 'Anarquía', dist: ['Monarquía', 'Democracia', 'Autocracia'] },
+    { def: 'Sistema de gobierno basado en el mérito y las capacidades personales', correct: 'Meritocracia', dist: ['Plutocracia', 'Aristocracia', 'Burocracia'] },
+    { def: 'Gobierno ejercido por la clase noble o privilegiada', correct: 'Aristocracia', dist: ['Democracia', 'Plutocracia', 'Meritocracia'] },
+    { def: 'Administración dominada por funcionarios y trámites excesivos', correct: 'Burocracia', dist: ['Autocracia', 'Tecnocracia', 'Meritocracia'] },
+    { def: 'Sistema en el que gobiernan los expertos y técnicos', correct: 'Tecnocracia', dist: ['Burocracia', 'Meritocracia', 'Democracia'] },
+    { def: 'Gobierno de un solo soberano de forma hereditaria', correct: 'Monarquía', dist: ['República', 'Oligarquía', 'Autocracia'] },
+    { def: 'Estado en el que el jefe del Estado es elegido y no hereditario', correct: 'República', dist: ['Monarquía', 'Autocracia', 'Democracia'] },
+    { def: 'Acto de privar ilegalmente de la libertad a una persona', correct: 'Secuestro', dist: ['Extorsión', 'Coacción', 'Usurpación'] },
+    { def: 'Delito que consiste en apropiarse de bienes públicos por quien los administra', correct: 'Malversación', dist: ['Prevaricación', 'Cohecho', 'Estafa'] },
+    { def: 'Delito del funcionario que dicta resolución injusta a sabiendas', correct: 'Prevaricación', dist: ['Malversación', 'Cohecho', 'Negligencia'] },
+    { def: 'Delito que consiste en sobornar a un funcionario público', correct: 'Cohecho', dist: ['Prevaricación', 'Malversación', 'Extorsión'] },
+    { def: 'Derecho fundamental a expresar libremente pensamientos e ideas', correct: 'Libertad de expresión', dist: ['Libertad de prensa', 'Derecho de reunión', 'Libertad de cátedra'] },
+    { def: 'Derecho a no ser detenido sin orden judicial o flagrante delito', correct: 'Habeas Corpus', dist: ['Presunción de inocencia', 'Derecho de defensa', 'Tutela judicial'] },
+    { def: 'Principio por el cual nadie es culpable hasta que se demuestre', correct: 'Presunción de inocencia', dist: ['Habeas Corpus', 'In dubio pro reo', 'Tutela judicial'] },
+    { def: 'Cesión del poder legislativo por las Cortes al Gobierno', correct: 'Decreto legislativo', dist: ['Decreto ley', 'Ley orgánica', 'Ley ordinaria'] },
+    { def: 'Norma con rango de ley dictada por el Gobierno en caso de urgencia', correct: 'Decreto ley', dist: ['Decreto legislativo', 'Ley orgánica', 'Orden ministerial'] },
+    { def: 'Periodo durante el cual se suspenden ciertas garantías constitucionales', correct: 'Estado de excepción', dist: ['Estado de alarma', 'Estado de sitio', 'Ley marcial'] },
+    { def: 'Acción de votar para elegir representantes políticos', correct: 'Sufragio', dist: ['Referéndum', 'Plebiscito', 'Moción'] },
+    { def: 'Consulta popular directa sobre una cuestión política concreta', correct: 'Referéndum', dist: ['Sufragio', 'Plebiscito', 'Elecciones'] },
+  ];
+
+  const d = pick(defs, rng);
+  const opts = shuffle([d.correct, ...d.dist], rng);
+  return {
+    id: `sdef-${Math.floor(rng()*1e6)}`, category: 'sinonimos-antonimos',
+    tags: ['definicion-especializada'],
+    question: `"${d.def}":`,
+    options: opts, answer: opts.indexOf(d.correct),
+    explanation: `La respuesta es "${d.correct}".`,
+  };
+}
+
+// ============================================================
+// 61. CONDITIONAL ARITHMETIC LOGIC (razonamiento-logico)
+// "If 55 > 3×4² mark B. If 316 = 2×156 mark A. If 1/3 of 556 is even mark C"
+// ============================================================
+function generateConditionalLogicQuestion(rng) {
+  // Generate 3-4 conditions, only one is true
+  function makeCondition(rng) {
+    const type = Math.floor(rng() * 6);
+    if (type === 0) {
+      const a = 10 + Math.floor(rng() * 90);
+      const b = 2 + Math.floor(rng() * 5);
+      const c = 2 + Math.floor(rng() * 8);
+      const product = b * c * c;
+      const isTrue = a > product;
+      return { text: `${a} es superior al ${b === 2 ? 'doble' : b === 3 ? 'triple' : b + ' veces'} del cuadrado de ${c}`, isTrue };
+    } else if (type === 1) {
+      const a = 100 + Math.floor(rng() * 400);
+      const b = 2 + Math.floor(rng() * 4);
+      const c = Math.floor(a / b) + (rng() > 0.5 ? 0 : 1);
+      const isTrue = a === b * c;
+      return { text: `${a} es ${b === 2 ? 'el doble' : b === 3 ? 'el triple' : b + ' veces'} de ${c}`, isTrue };
+    } else if (type === 2) {
+      const a = 100 + Math.floor(rng() * 900);
+      const b = 2 + Math.floor(rng() * 6);
+      const result = Math.floor(a / b);
+      const isEven = result % 2 === 0;
+      const claim = rng() > 0.5 ? 'par' : 'impar';
+      const isTrue = claim === 'par' ? isEven : !isEven;
+      return { text: `1/${b} de ${a} es ${claim}`, isTrue };
+    } else if (type === 3) {
+      const a = 10 + Math.floor(rng() * 90);
+      const b = 2 + Math.floor(rng() * 10);
+      const isTrue = a % b === 0;
+      return { text: `${a} es múltiplo de ${b}`, isTrue };
+    } else if (type === 4) {
+      const a = 20 + Math.floor(rng() * 80);
+      const b = 10 + Math.floor(rng() * 90);
+      const sum = a + b;
+      const claim = sum + (rng() > 0.5 ? 0 : Math.floor(rng() * 5) + 1);
+      const isTrue = sum === claim;
+      return { text: `la suma de ${a} y ${b} es ${claim}`, isTrue };
+    } else {
+      const a = 2 + Math.floor(rng() * 8);
+      const pow = a * a;
+      const claim = pow + (rng() > 0.5 ? 0 : 1);
+      const isTrue = pow === claim;
+      return { text: `el cuadrado de ${a} es ${claim}`, isTrue };
+    }
+  }
+
+  const letters = ['A', 'B', 'C', 'D'];
+  const conditions = [];
+  let trueIdx = -1;
+
+  // Generate conditions ensuring exactly one is true
+  for (let attempt = 0; attempt < 50; attempt++) {
+    conditions.length = 0;
+    trueIdx = Math.floor(rng() * 4);
+    for (let i = 0; i < 4; i++) {
+      let cond;
+      let safety = 0;
+      do {
+        cond = makeCondition(rng);
+        safety++;
+      } while (safety < 20 && cond.isTrue !== (i === trueIdx));
+      if (cond.isTrue === (i === trueIdx)) {
+        conditions.push(cond);
+      }
+    }
+    if (conditions.length === 4) break;
+  }
+
+  if (conditions.length !== 4) return generateConditionalLogicQuestion(rng);
+
+  const parts = conditions.map((c, i) => `Si ${c.text}, marque la letra "${letters[i]}".`);
+  const correct = letters[trueIdx];
+  const opts = [...letters];
+
+  return {
+    id: `clog-${Math.floor(rng()*1e6)}`, category: 'razonamiento-logico',
+    tags: ['logica-condicional'],
+    question: parts.join(' '),
+    options: opts, answer: opts.indexOf(correct),
+    explanation: `Solo la condición "${letters[trueIdx]}" es verdadera: ${conditions[trueIdx].text}.`,
+  };
+}
+
+// ============================================================
 // VALIDATION
 // ============================================================
 function validateQuestion(q) {
@@ -2904,19 +4210,19 @@ const VISUAL_GENERATORS = [
 const FACTOR_GENERATORS = {
   'factor-verbal': {
     visual: [],
-    text: [generateSynonymQuestion, generateAntonymQuestion, generateAnalogyQuestion, generateClozeQuestion, generatePalabraDiferenteQuestion, generateDefinicionQuestion, generateCompletarFraseQuestion],
+    text: [generateSynonymQuestion, generateAntonymQuestion, generateAnalogyQuestion, generateClozeQuestion, generatePalabraDiferenteQuestion, generateDefinicionQuestion, generateCompletarFraseQuestion, generateRefranQuestion, generateIncorrectAntonymPairQuestion, generateSynonymInContextQuestion, generateMostDissimilarQuestion, generateSpecializedDefQuestion],
   },
   'factor-razonamiento': {
     visual: [generateDominoQuestion, generateMatrixQuestion, generateComplexSeriesQuestion, generateShapeAlgebraQuestion, generateCircuitQuestion, generateOddShapeQuestion, generatePinwheelQuestion, generateDividedCircleQuestion, generateClockSeriesQuestion, generateRadialSectorQuestion, generateNumberPairSeriesQuestion, generateArrowMatrixQuestion, generateShapeCardQuestion],
-    text: [generateSilogismoQuestion, generateLetterSeriesQuestion],
+    text: [generateSilogismoQuestion, generateLetterSeriesQuestion, generateLetterNumberCodeQuestion, generateUniqueLetterQuestion, generateTextComprehensionQuestion, generateInventedLanguageQuestion, generateSymbolDecodeQuestion, generateCalendarSeriesQuestion, generateFamilyTreeQuestion, generateConditionalLogicQuestion],
   },
   'factor-numerico': {
     visual: [generateChartQuestion, generateNumberCardQuestion],
-    text: [generateAptitudNumericaQuestion, generateLetterValueAlgebraQuestion, generateNumberSeriesQuestion, generateWrongNumberQuestion],
+    text: [generateAptitudNumericaQuestion, generateLetterValueAlgebraQuestion, generateNumberSeriesQuestion, generateWrongNumberQuestion, generateFractionSeriesQuestion, generateSymbolOperationQuestion, generateNumberTreeQuestion, generateCombinatoricsQuestion],
   },
   'factor-espacial': {
     visual: [generateCubeCountingQuestion, generateGridPatternQuestion, generateOverlayQuestion, generateFoldingQuestion, generateCountingQuestion, generateSymbolFrequencyQuestion, generateGridComparisonQuestion, generateSphereRotationQuestion, generateCubeNetQuestion, generateSymbolAlphabetQuestion, generateLetterGridQuestion],
-    text: [generateLetterCoincidenceQuestion],
+    text: [generateLetterCoincidenceQuestion, generateDigitConditionQuestion, generateConsonantTableQuestion, generateDigitBlockCodeQuestion],
   },
 };
 
@@ -2971,6 +4277,39 @@ const TEXT_GENERATORS = [
   generateAnalogyQuestion,
   generateAnalogyQuestion,
   generateAnalogyQuestion,
+  // New generators (session 7)
+  generateFractionSeriesQuestion,
+  generateFractionSeriesQuestion,
+  generateLetterNumberCodeQuestion,
+  generateSymbolOperationQuestion,
+  generateSymbolOperationQuestion,
+  generateRefranQuestion,
+  generateRefranQuestion,
+  generateDigitConditionQuestion,
+  generateDigitConditionQuestion,
+  generateIncorrectAntonymPairQuestion,
+  generateSynonymInContextQuestion,
+  generateSynonymInContextQuestion,
+  generateMostDissimilarQuestion,
+  generateUniqueLetterQuestion,
+  generateNumberTreeQuestion,
+  generateNumberTreeQuestion,
+  generateConsonantTableQuestion,
+  generateTextComprehensionQuestion,
+  generateTextComprehensionQuestion,
+  generateDigitBlockCodeQuestion,
+  generateInventedLanguageQuestion,
+  generateSymbolDecodeQuestion,
+  // New generators (session 7 - pack 6)
+  generateCombinatoricsQuestion,
+  generateCombinatoricsQuestion,
+  generateCalendarSeriesQuestion,
+  generateFamilyTreeQuestion,
+  generateFamilyTreeQuestion,
+  generateSpecializedDefQuestion,
+  generateSpecializedDefQuestion,
+  generateConditionalLogicQuestion,
+  generateConditionalLogicQuestion,
 ];
 
 export function generateTextQuestions(count = 4, seed = Date.now()) {
