@@ -34,9 +34,9 @@
 
 .bg-slideshow img {
   position: absolute;
-  inset: -40px;
-  width: calc(100% + 80px);
-  height: calc(100% + 80px);
+  inset: -60px;
+  width: calc(100% + 120px);
+  height: calc(100% + 120px);
   object-fit: cover;
   image-rendering: auto;
   filter: blur(1px) brightness(0.35) saturate(0.8);
