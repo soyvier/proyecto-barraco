@@ -34,12 +34,63 @@ function shuffle(arr, rng) {
 function safeDistractors(ansStr, count, gen, rng) {
   const d = [];
   const used = new Set([ansStr]);
-  let s = 0;
-  while (d.length < count && s < 200) {
-    s++;
+  const addUnique = (vs) => {
+    if (vs && vs.trim() !== '' && vs !== 'null' && vs !== 'undefined' && !used.has(vs)) {
+      used.add(vs); d.push(vs); return true;
+    }
+    return false;
+  };
+  // Primary: use the provided generator
+  for (let s = 0; d.length < count && s < 500; s++) {
     const v = gen(rng);
-    const vs = typeof v === 'string' ? v : JSON.stringify(v);
-    if (!used.has(vs)) { used.add(vs); d.push(vs); }
+    addUnique(typeof v === 'string' ? v : JSON.stringify(v));
+  }
+  // Fallback 1: numeric mutation (for "3" or "3,5" style answers)
+  if (d.length < count && /^-?\d+$/.test(ansStr.trim())) {
+    const num = parseInt(ansStr);
+    for (const off of [1,-1,2,-2,3,-3,4,-4]) {
+      if (d.length >= count) break;
+      addUnique(String(num + off));
+    }
+  }
+  if (d.length < count && /^\d+,\d+$/.test(ansStr.trim())) {
+    const [a, b] = ansStr.split(',').map(Number);
+    for (const [da,db] of [[1,0],[0,1],[-1,0],[0,-1],[1,1],[-1,-1],[2,0],[0,2]]) {
+      if (d.length >= count) break;
+      addUnique(`${Math.max(0,a+da)},${Math.max(0,b+db)}`);
+    }
+  }
+  // Fallback 2: JSON array mutation
+  if (d.length < count) {
+    try {
+      const parsed = JSON.parse(ansStr);
+      if (Array.isArray(parsed)) {
+        for (let att = 0; att < 40 && d.length < count; att++) {
+          const cl = JSON.parse(ansStr);
+          const i = Math.floor(rng() * cl.length);
+          if (typeof cl[i] === 'boolean') cl[i] = !cl[i];
+          else if (typeof cl[i] === 'number') cl[i] += (Math.floor(rng()*3)+1) * (rng()>0.5?1:-1);
+          else if (typeof cl[i] === 'string') {
+            const alts = ['empty','solid','hatched','dotted','black','gray'].filter(x => x !== cl[i]);
+            if (alts.length) cl[i] = alts[Math.floor(rng()*alts.length)];
+          }
+          addUnique(JSON.stringify(cl));
+        }
+      } else if (typeof parsed === 'object' && parsed) {
+        const ks = Object.keys(parsed);
+        for (let att = 0; att < 40 && d.length < count; att++) {
+          const cl = JSON.parse(ansStr);
+          const k = ks[Math.floor(rng()*ks.length)];
+          if (typeof cl[k] === 'number') cl[k] += (Math.floor(rng()*4)+1) * (rng()>0.5?1:-1);
+          else if (typeof cl[k] === 'string') {
+            const p = {shape:SHAPES,fill:FILLS,size:SIZES,border:BORDERS}[k] || FILLS;
+            const alts = p.filter(x => x !== cl[k]);
+            if (alts.length) cl[k] = alts[Math.floor(rng()*alts.length)];
+          }
+          addUnique(JSON.stringify(cl));
+        }
+      }
+    } catch(e) {}
   }
   return d;
 }
@@ -54,17 +105,21 @@ const BORDERS = ['solid', 'dashed', 'dotted', 'double'];
 // ============================================================
 function generateDominoQuestion(rng) {
   const patterns = [
-    // [description, topFn, botFn]
-    (st, sb) => ({ seq: (i) => [(st+i)%7, (sb+i)%7], exp: 'Ambas +1.' }),
+    // Harder patterns: interdependencies between top/bottom, modular arithmetic
     (st, sb) => ({ seq: (i) => [(st+i*2)%7, Math.max(0,sb-i)], exp: 'Superior +2, inferior -1.' }),
     (st, sb) => { const sum=st+sb; return { seq: (i) => { const t=(st+i)%7; return [t, Math.max(0,Math.min(6,sum-t))]; }, exp: `Suma constante=${sum}.` }; },
-    (st, sb) => ({ seq: (i) => [(st+i*2)%7, (sb+i*2)%7], exp: 'Ambas +2.' }),
-    (st, sb) => ({ seq: (i) => [(st+i)%7, 6-((st+i)%7)], exp: 'Inferior=complemento a 6.' }),
+    (st, sb) => ({ seq: (i) => [(st+i)%7, 6-((st+i)%7)], exp: 'Inferior=complemento a 6 del superior.' }),
     (st, sb) => ({ seq: (i) => [(st+i)%7, (sb+i*3)%7], exp: 'Superior +1, inferior +3.' }),
     (st, sb) => ({ seq: (i) => [i%2===0?st:(st+3)%7, (sb+i)%7], exp: `Superior alterna ${st}/${(st+3)%7}, inferior +1.` }),
     (st, sb) => ({ seq: (i) => [Math.max(0,st-i), (sb+i*2)%7], exp: 'Superior -1, inferior +2.' }),
-    (st, sb) => ({ seq: (i) => [(st+i)%7, (sb+i)%7 === 0 ? 6 : (sb+i)%7], exp: 'Ambas +1, inferior salta el 0.' }),
     (st, sb) => ({ seq: (i) => [(st+Math.floor(i/2))%7, (sb+i)%7], exp: 'Superior +1 cada 2, inferior +1.' }),
+    // New harder patterns
+    (st, sb) => ({ seq: (i) => [(st+i)%7, ((st+i)%7 + sb)%7], exp: `Inferior = superior + ${sb} (mod 7).` }),
+    (st, sb) => ({ seq: (i) => [i%2===0?(st+Math.floor(i/2))%7:(st+3+Math.floor(i/2))%7, (sb+i*2)%7], exp: 'Superior: dos series intercaladas, inferior +2.' }),
+    (st, sb) => ({ seq: (i) => [(st+i)%7, (sb + (st+i)%7)%7], exp: 'Inferior depende del superior: inferior = superior + base.' }),
+    (st, sb) => { const fib=[1,1,2,3,5,8,13]; return { seq: (i) => [(st+fib[i])%7, (sb+i)%7], exp: 'Superior avanza por Fibonacci, inferior +1.' }; },
+    (st, sb) => ({ seq: (i) => [(st+i*i)%7, Math.abs(sb-i*2)%7], exp: 'Superior avanza por cuadrados, inferior oscila.' }),
+    (st, sb) => ({ seq: (i) => [i%3===0?st:i%3===1?(st+2)%7:(st+5)%7, (sb+i)%7], exp: `Superior cicla ${st},${(st+2)%7},${(st+5)%7}; inferior +1.` }),
   ];
   const st = Math.floor(rng()*5)+1, sb = Math.floor(rng()*5)+1;
   const pat = pick(patterns, rng)(st, sb);
@@ -72,9 +127,11 @@ function generateDominoQuestion(rng) {
   const ans = pat.seq(5);
 
   const ansStr = ans.join(',');
+  // Plausible distractors: only ±1 on one or both values (harder to distinguish)
   const dist = safeDistractors(ansStr, 3, r => {
-    const a0 = Math.min(6,Math.max(0,ans[0]+Math.floor(r()*5)-2));
-    const a1 = Math.min(6,Math.max(0,ans[1]+Math.floor(r()*5)-2));
+    const which = Math.floor(r() * 3); // 0=top, 1=bottom, 2=both
+    const a0 = which !== 1 ? Math.min(6,Math.max(0,ans[0]+pick([-1,1],r))) : ans[0];
+    const a1 = which !== 0 ? Math.min(6,Math.max(0,ans[1]+pick([-1,1],r))) : ans[1];
     return `${a0},${a1}`;
   }, rng);
 
@@ -2267,75 +2324,143 @@ function generateLetterValueAlgebraQuestion(rng) {
 // Find the next letter in a sequence
 // ============================================================
 function generateLetterSeriesQuestion(rng) {
-  // Spanish alphabet without w (as per UVE rules) and without ñ for simplicity
   const ALPHA = 'abcdefghijklmnopqrstuvxyz';
-  const patternType = Math.floor(rng() * 8);
+  const L = ALPHA.length;
+  const patternType = Math.floor(rng() * 14);
   let series, answer, explanation;
 
   if (patternType === 0) {
-    // Simple +1: consecutive letters
-    const start = Math.floor(rng() * 18);
-    series = [];
-    for (let i = 0; i < 6; i++) series.push(ALPHA[(start + i) % ALPHA.length]);
-    answer = ALPHA[(start + 6) % ALPHA.length];
-    explanation = `Serie consecutiva: cada letra avanza +1 posicion`;
-  } else if (patternType === 1) {
-    // Skip +2
-    const start = Math.floor(rng() * 18);
-    series = [];
-    for (let i = 0; i < 5; i++) series.push(ALPHA[(start + i * 2) % ALPHA.length]);
-    answer = ALPHA[(start + 10) % ALPHA.length];
-    explanation = `Serie con salto de 2: cada letra avanza +2 posiciones`;
-  } else if (patternType === 2) {
-    // Two interleaved sequences each +1
-    const s1 = Math.floor(rng() * 15), s2 = Math.floor(rng() * 15);
+    // Two interleaved: one +2, other -1
+    const s1 = Math.floor(rng() * 15), s2 = 15 + Math.floor(rng() * 8);
     if (s1 === s2) return generateLetterSeriesQuestion(rng);
     series = [];
-    for (let i = 0; i < 3; i++) { series.push(ALPHA[(s1 + i) % ALPHA.length]); series.push(ALPHA[(s2 + i) % ALPHA.length]); }
-    answer = ALPHA[(s1 + 3) % ALPHA.length];
-    explanation = `Dos series intercaladas: ${ALPHA[s1%ALPHA.length]},${ALPHA[(s1+1)%ALPHA.length]},${ALPHA[(s1+2)%ALPHA.length]}... y ${ALPHA[s2%ALPHA.length]},${ALPHA[(s2+1)%ALPHA.length]},${ALPHA[(s2+2)%ALPHA.length]}...`;
-  } else if (patternType === 3) {
-    // Reverse: z, y, x, w, ...
-    const start = 15 + Math.floor(rng() * 8);
-    series = [];
-    for (let i = 0; i < 6; i++) series.push(ALPHA[(start - i + ALPHA.length) % ALPHA.length]);
-    answer = ALPHA[(start - 6 + ALPHA.length) % ALPHA.length];
-    explanation = `Serie descendente: cada letra retrocede -1`;
-  } else if (patternType === 4) {
-    // Groups of 3: abc, def, ghi → j
-    const start = Math.floor(rng() * 12);
-    series = [];
-    for (let g = 0; g < 3; g++) for (let i = 0; i < 3; i++) series.push(ALPHA[(start + g * 3 + i) % ALPHA.length]);
-    answer = ALPHA[(start + 9) % ALPHA.length];
-    explanation = `Grupos de 3 letras consecutivas`;
-  } else if (patternType === 5) {
-    // Increasing skip: +1, +2, +3, +4...
+    for (let i = 0; i < 4; i++) { series.push(ALPHA[(s1 + i*2) % L]); series.push(ALPHA[(s2 - i + L) % L]); }
+    answer = ALPHA[(s1 + 4*2) % L];
+    explanation = `Dos series intercaladas: una +2 y otra -1`;
+  } else if (patternType === 1) {
+    // Skip increasing: +1, +2, +3, +4, +5
     const start = Math.floor(rng() * 10);
-    series = [ALPHA[start % ALPHA.length]];
-    let pos = start;
-    for (let skip = 1; skip <= 4; skip++) { pos += skip; series.push(ALPHA[pos % ALPHA.length]); }
-    pos += 5;
-    answer = ALPHA[pos % ALPHA.length];
-    explanation = `Saltos crecientes: +1, +2, +3, +4, +5`;
+    series = [ALPHA[start % L]]; let pos = start;
+    for (let skip = 1; skip <= 5; skip++) { pos += skip; series.push(ALPHA[pos % L]); }
+    pos += 6;
+    answer = ALPHA[pos % L];
+    explanation = `Saltos crecientes: +1, +2, +3, +4, +5, +6`;
+  } else if (patternType === 2) {
+    // Palindrome pattern: a,b,c,d,c,b,a → builds then reverses
+    const start = Math.floor(rng() * 15); const step = pick([1,2,3], rng);
+    series = [];
+    for (let i = 0; i < 4; i++) series.push(ALPHA[(start + i*step) % L]);
+    for (let i = 2; i >= 0; i--) series.push(ALPHA[(start + i*step) % L]);
+    // Ask what comes at position 8 (start of new palindrome)
+    answer = ALPHA[(start) % L];
+    explanation = `Patron palindromo que se repite: sube y baja`;
+  } else if (patternType === 3) {
+    // Three interleaved +1 sequences
+    const s1 = Math.floor(rng() * 8), s2 = 8 + Math.floor(rng() * 8), s3 = 16 + Math.floor(rng() * 6);
+    series = [];
+    for (let i = 0; i < 3; i++) {
+      series.push(ALPHA[(s1+i) % L]); series.push(ALPHA[(s2+i) % L]); series.push(ALPHA[(s3+i) % L]);
+    }
+    answer = ALPHA[(s1+3) % L];
+    explanation = `Tres series intercaladas: cada tercera letra avanza +1`;
+  } else if (patternType === 4) {
+    // Reverse with skip -2
+    const start = 18 + Math.floor(rng() * 5);
+    series = [];
+    for (let i = 0; i < 6; i++) series.push(ALPHA[(start - i*2 + L*2) % L]);
+    answer = ALPHA[(start - 12 + L*2) % L];
+    explanation = `Serie descendente con salto de 2: retrocede -2`;
+  } else if (patternType === 5) {
+    // Alternating forward/backward: +3, -1, +3, -1...
+    const start = Math.floor(rng() * 12);
+    const fwd = pick([3, 4, 5], rng), bk = pick([1, 2], rng);
+    series = [ALPHA[start % L]]; let pos = start;
+    for (let i = 1; i < 7; i++) { pos += (i % 2 === 1 ? fwd : -bk); series.push(ALPHA[(pos % L + L) % L]); }
+    pos += (7 % 2 === 1 ? fwd : -bk);
+    answer = ALPHA[(pos % L + L) % L];
+    explanation = `Patron alternante: +${fwd}, -${bk}`;
   } else if (patternType === 6) {
-    // Repeated pairs: a,a,b,b,c,c → d
-    const start = Math.floor(rng() * 18);
+    // Groups increasing size: a, bc, def, ghij → g (first of group 4)
+    const start = Math.floor(rng() * 10);
+    series = []; let pos = start;
+    for (let g = 1; g <= 3; g++) for (let i = 0; i < g; i++) { series.push(ALPHA[pos % L]); pos++; }
+    // Group 4 starts at pos
+    answer = ALPHA[pos % L];
+    explanation = `Grupos de tamano creciente: 1, 2, 3 letras → siguiente grupo`;
+  } else if (patternType === 7) {
+    // Skip decreasing: +5, +4, +3, +2, +1
+    const start = Math.floor(rng() * 8);
+    series = [ALPHA[start % L]]; let pos = start;
+    for (let skip = 5; skip >= 1; skip--) { pos += skip; series.push(ALPHA[pos % L]); }
+    // Next would be +0 (same letter) - too easy. Use skip -1 (backwards)
+    answer = ALPHA[(pos - 1 + L) % L];
+    explanation = `Saltos decrecientes: +5, +4, +3, +2, +1, -1 (continua patron)`;
+  } else if (patternType === 8) {
+    // Vowel/consonant alternating with progression
+    const vowels = [0, 4, 8, 14, 20]; // a,e,i,o,u positions in ALPHA
+    const vi = Math.floor(rng() * 3);
     series = [];
-    for (let i = 0; i < 3; i++) { series.push(ALPHA[(start + i) % ALPHA.length]); series.push(ALPHA[(start + i) % ALPHA.length]); }
-    answer = ALPHA[(start + 3) % ALPHA.length];
-    explanation = `Pares repetidos: cada letra aparece dos veces`;
+    for (let i = 0; i < 4; i++) {
+      series.push(ALPHA[vowels[(vi + i) % 5]]);
+      series.push(ALPHA[(vowels[(vi + i) % 5] + 1 + i) % L]);
+    }
+    answer = ALPHA[vowels[(vi + 4) % 5]];
+    explanation = `Vocales consecutivas alternando con consonantes progresivas`;
+  } else if (patternType === 9) {
+    // Double skip: +2, +2, +3, +3, +4, +4...
+    const start = Math.floor(rng() * 10);
+    series = [ALPHA[start % L]]; let pos = start;
+    const skips = [2,2,3,3,4,4,5];
+    for (let i = 0; i < 6; i++) { pos += skips[i]; series.push(ALPHA[pos % L]); }
+    answer = ALPHA[(pos + skips[6]) % L];
+    explanation = `Saltos que se repiten y crecen: +2,+2,+3,+3,+4,+4,+5`;
+  } else if (patternType === 10) {
+    // Alphabet position math: positions sum to constant
+    const sum = 10 + Math.floor(rng() * 10);
+    series = [];
+    for (let i = 1; i <= 6; i += 2) {
+      series.push(ALPHA[i % L]);
+      series.push(ALPHA[(sum - i) % L]);
+    }
+    answer = ALPHA[7 % L];
+    explanation = `Pares cuyas posiciones suman ${sum}`;
+  } else if (patternType === 11) {
+    // Fibonacci positions: 1, 1, 2, 3, 5, 8, 13...
+    const fib = [1, 1, 2, 3, 5, 8, 13, 21];
+    const offset = Math.floor(rng() * 5);
+    series = fib.slice(0, 7).map(f => ALPHA[(f + offset) % L]);
+    answer = ALPHA[(fib[7] + offset) % L];
+    explanation = `Posiciones Fibonacci en el alfabeto`;
+  } else if (patternType === 12) {
+    // Mirror around center: one goes forward, other backward from opposite end
+    const s = Math.floor(rng() * 5);
+    series = [];
+    for (let i = 0; i < 4; i++) {
+      series.push(ALPHA[(s + i) % L]);
+      series.push(ALPHA[(L - 1 - s - i + L) % L]);
+    }
+    answer = ALPHA[(s + 4) % L];
+    explanation = `Serie espejo: una avanza desde el inicio, otra retrocede desde el final`;
   } else {
-    // Skip +3
-    const start = Math.floor(rng() * 15);
-    series = [];
-    for (let i = 0; i < 5; i++) series.push(ALPHA[(start + i * 3) % ALPHA.length]);
-    answer = ALPHA[(start + 15) % ALPHA.length];
-    explanation = `Serie con salto de 3`;
+    // Complex: +1, +2, +1, +3, +1, +4 (fixed step alternating with growing step)
+    const start = Math.floor(rng() * 10);
+    const fixed = pick([1, 2], rng);
+    series = [ALPHA[start % L]]; let pos = start;
+    for (let i = 1; i <= 6; i++) {
+      pos += (i % 2 === 1 ? fixed : Math.floor(i / 2) + 1);
+      series.push(ALPHA[pos % L]);
+    }
+    pos += (7 % 2 === 1 ? fixed : Math.floor(7 / 2) + 1);
+    answer = ALPHA[pos % L];
+    explanation = `Patron: +${fixed} fijo alternando con saltos crecientes`;
   }
 
   const seriesStr = series.join(', ') + ', ?';
   const dists = new Set([answer]);
-  while (dists.size < 4) dists.add(ALPHA[Math.floor(rng() * ALPHA.length)]);
+  for (let _s = 0; dists.size < 4 && _s < 100; _s++) {
+    const c = ALPHA[Math.floor(rng() * ALPHA.length)];
+    if (c !== answer) dists.add(c);
+  }
   const opts = shuffle([...dists], rng);
 
   return {
@@ -2352,91 +2477,146 @@ function generateLetterSeriesQuestion(rng) {
 // Find the next number in a sequence
 // ============================================================
 function generateNumberSeriesQuestion(rng) {
-  const patternType = Math.floor(rng() * 10);
+  const patternType = Math.floor(rng() * 16);
   let series, answer, explanation;
 
   if (patternType === 0) {
-    // Arithmetic +d
-    const d = pick([2, 3, 4, 5, 7], rng);
-    const start = 1 + Math.floor(rng() * 10);
-    series = [];
-    for (let i = 0; i < 6; i++) series.push(start + i * d);
-    answer = start + 6 * d;
-    explanation = `Serie aritmetica: +${d}`;
+    // Alternating operations: x2, +3, x2, +3...
+    const mult = pick([2, 3], rng); const add = pick([1, 3, 5, 7], rng);
+    const start = 1 + Math.floor(rng() * 5);
+    series = [start]; let v = start;
+    for (let i = 1; i < 6; i++) { v = i % 2 === 1 ? v * mult : v + add; series.push(v); }
+    answer = 6 % 2 === 1 ? v * mult : v + add;
+    explanation = `Operaciones alternas: x${mult}, +${add}`;
   } else if (patternType === 1) {
-    // Geometric x2 or x3
-    const mult = pick([2, 3], rng);
-    const start = 1 + Math.floor(rng() * 4);
-    series = [];
-    let v = start;
-    for (let i = 0; i < 5; i++) { series.push(v); v *= mult; }
-    answer = v;
-    explanation = `Serie geometrica: x${mult}`;
+    // Geometric with mixed multipliers: x2, x3, x2, x3...
+    const m1 = pick([2, 3], rng), m2 = pick([2, 3, 4], rng);
+    const start = 1 + Math.floor(rng() * 3);
+    series = [start]; let v = start;
+    for (let i = 1; i < 6; i++) { v = i % 2 === 1 ? v * m1 : v * m2; series.push(v); }
+    answer = 6 % 2 === 1 ? v * m1 : v * m2;
+    explanation = `Multiplicaciones alternas: x${m1}, x${m2}`;
   } else if (patternType === 2) {
-    // Fibonacci-like
-    const a = 1 + Math.floor(rng() * 5), b = 1 + Math.floor(rng() * 5);
+    // Fibonacci-like with larger seeds
+    const a = 2 + Math.floor(rng() * 8), b = 3 + Math.floor(rng() * 8);
     series = [a, b];
-    for (let i = 2; i < 6; i++) series.push(series[i - 1] + series[i - 2]);
+    for (let i = 2; i < 7; i++) series.push(series[i - 1] + series[i - 2]);
     answer = series[series.length - 1] + series[series.length - 2];
     explanation = `Cada numero es la suma de los dos anteriores`;
   } else if (patternType === 3) {
-    // Alternating +a, -b
-    const a = pick([3, 4, 5, 6], rng), b = pick([1, 2], rng);
-    const start = 1 + Math.floor(rng() * 10);
+    // Alternating +a, -b with larger values
+    const a = pick([5, 7, 9, 11, 13], rng), b = pick([2, 3, 4, 6], rng);
+    const start = 10 + Math.floor(rng() * 20);
     series = [start];
-    for (let i = 1; i < 6; i++) series.push(series[i - 1] + (i % 2 === 1 ? a : -b));
-    answer = series[series.length - 1] + (6 % 2 === 1 ? a : -b);
+    for (let i = 1; i < 7; i++) series.push(series[i - 1] + (i % 2 === 1 ? a : -b));
+    answer = series[series.length - 1] + (7 % 2 === 1 ? a : -b);
     explanation = `Patron alternante: +${a}, -${b}`;
   } else if (patternType === 4) {
-    // Squares
-    const start = 1 + Math.floor(rng() * 4);
+    // n^2 + n (triangulares desplazados)
+    const offset = pick([0, 1, 2], rng);
+    const start = 2 + Math.floor(rng() * 3);
     series = [];
-    for (let i = start; i < start + 5; i++) series.push(i * i);
-    answer = (start + 5) * (start + 5);
-    explanation = `Cuadrados perfectos: ${start + 5}^2 = ${answer}`;
+    for (let i = start; i < start + 6; i++) series.push(i * i + i * offset);
+    answer = (start + 6) * (start + 6) + (start + 6) * offset;
+    explanation = offset === 0 ? `Cuadrados perfectos: n^2` : `n^2 + ${offset}n`;
   } else if (patternType === 5) {
-    // Decreasing arithmetic
-    const d = pick([2, 3, 4, 5], rng);
-    const start = 50 + Math.floor(rng() * 30);
-    series = [];
-    for (let i = 0; i < 6; i++) series.push(start - i * d);
-    answer = start - 6 * d;
-    explanation = `Serie descendente: -${d}`;
-  } else if (patternType === 6) {
-    // Two interleaved arithmetic sequences
-    const d1 = pick([2, 3], rng), d2 = pick([1, 4, 5], rng);
-    const s1 = 1 + Math.floor(rng() * 10), s2 = 10 + Math.floor(rng() * 10);
-    series = [];
-    for (let i = 0; i < 3; i++) { series.push(s1 + i * d1); series.push(s2 + i * d2); }
+    // Two interleaved series with different operations
+    const d1 = pick([3, 5, 7], rng), m2 = pick([2, 3], rng);
+    const s1 = 2 + Math.floor(rng() * 10), s2 = 1 + Math.floor(rng() * 4);
+    series = []; let v2 = s2;
+    for (let i = 0; i < 3; i++) { series.push(s1 + i * d1); series.push(v2); v2 *= m2; }
     answer = s1 + 3 * d1;
-    explanation = `Dos series intercaladas: una +${d1} y otra +${d2}`;
-  } else if (patternType === 7) {
-    // Increasing differences: +1, +2, +3, +4...
-    const start = 1 + Math.floor(rng() * 8);
+    explanation = `Dos series intercaladas: una +${d1} y otra x${m2}`;
+  } else if (patternType === 6) {
+    // Increasing differences: +2, +4, +6, +8...
+    const start = 1 + Math.floor(rng() * 10);
+    const step = pick([2, 3], rng);
     series = [start];
-    for (let d = 1; d <= 5; d++) series.push(series[series.length - 1] + d);
-    answer = series[series.length - 1] + 6;
-    explanation = `Diferencias crecientes: +1, +2, +3, +4, +5, +6`;
-  } else if (patternType === 8) {
-    // Powers of 2
-    const start = Math.floor(rng() * 3);
+    for (let d = 1; d <= 5; d++) series.push(series[series.length - 1] + d * step);
+    answer = series[series.length - 1] + 6 * step;
+    explanation = `Diferencias crecientes: +${step}, +${step*2}, +${step*3}...`;
+  } else if (patternType === 7) {
+    // Cubes: n^3
+    const start = 1 + Math.floor(rng() * 3);
     series = [];
-    for (let i = start; i < start + 6; i++) series.push(Math.pow(2, i));
-    answer = Math.pow(2, start + 6);
-    explanation = `Potencias de 2`;
-  } else {
-    // Primes
-    const primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43];
+    for (let i = start; i < start + 5; i++) series.push(i * i * i);
+    answer = (start + 5) * (start + 5) * (start + 5);
+    explanation = `Cubos perfectos: ${start+5}^3 = ${answer}`;
+  } else if (patternType === 8) {
+    // Primes with offset
+    const primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47];
     const start = Math.floor(rng() * 6);
-    series = primes.slice(start, start + 6);
-    answer = primes[start + 6];
-    explanation = `Numeros primos consecutivos`;
+    const offset = pick([0, 1, -1, 10], rng);
+    series = primes.slice(start, start + 6).map(p => p + offset);
+    answer = primes[start + 6] + offset;
+    explanation = offset === 0 ? `Numeros primos` : `Primos ${offset > 0 ? '+' : ''}${offset}`;
+  } else if (patternType === 9) {
+    // Ratio pattern: each = prev * a/b
+    const num = pick([3, 5, 4], rng), den = pick([2, 3], rng);
+    let v = den * den * (1 + Math.floor(rng() * 3));
+    series = [v];
+    for (let i = 0; i < 5; i++) { v = v * num / den; series.push(Math.round(v)); }
+    answer = Math.round(v * num / den);
+    explanation = `Cada termino se multiplica por ${num}/${den}`;
+  } else if (patternType === 10) {
+    // Triangular numbers
+    const offset = Math.floor(rng() * 5);
+    series = [];
+    for (let i = offset; i < offset + 6; i++) series.push(i * (i + 1) / 2);
+    answer = (offset + 6) * (offset + 7) / 2;
+    explanation = `Numeros triangulares: n(n+1)/2`;
+  } else if (patternType === 11) {
+    // Add consecutive primes: start, +2, +3, +5, +7, +11
+    const primes = [2, 3, 5, 7, 11, 13, 17];
+    const start = 5 + Math.floor(rng() * 20);
+    series = [start];
+    for (let i = 0; i < 5; i++) series.push(series[series.length - 1] + primes[i]);
+    answer = series[series.length - 1] + primes[5];
+    explanation = `Se suman primos consecutivos: +2, +3, +5, +7, +11, +13`;
+  } else if (patternType === 12) {
+    // n^2 - 1 (product of consecutive: (n-1)(n+1))
+    const start = 2 + Math.floor(rng() * 4);
+    series = [];
+    for (let i = start; i < start + 6; i++) series.push(i * i - 1);
+    answer = (start + 6) * (start + 6) - 1;
+    explanation = `n^2 - 1 = (n-1)(n+1)`;
+  } else if (patternType === 13) {
+    // Alternating +a, x2
+    const a = pick([1, 3, 5], rng);
+    const start = 1 + Math.floor(rng() * 5);
+    series = [start]; let v = start;
+    for (let i = 1; i < 7; i++) { v = i % 2 === 1 ? v + a : v * 2; series.push(v); }
+    answer = 7 % 2 === 1 ? v + a : v * 2;
+    explanation = `Patron: +${a}, x2, +${a}, x2...`;
+  } else if (patternType === 14) {
+    // Double differences (second-order): differences themselves form arithmetic
+    const start = Math.floor(rng() * 10) + 1;
+    const d0 = pick([1, 2, 3], rng);
+    const dd = pick([1, 2, 3], rng);
+    series = [start]; let diff = d0;
+    for (let i = 0; i < 6; i++) { series.push(series[series.length - 1] + diff); diff += dd; }
+    answer = series[series.length - 1] + diff;
+    explanation = `Diferencias de segundo orden: las diferencias aumentan en +${dd}`;
+  } else {
+    // Powers alternating: 2^n, 3^n interleaved
+    const b1 = 2, b2 = 3;
+    series = [];
+    for (let i = 1; i <= 3; i++) { series.push(Math.pow(b1, i)); series.push(Math.pow(b2, i)); }
+    answer = Math.pow(b1, 4);
+    explanation = `Series intercaladas: potencias de 2 y potencias de 3`;
   }
 
   const correct = String(answer);
   const dists = new Set([correct]);
-  while (dists.size < 4) {
-    const off = pick([-2, -1, 1, 2, 3, -3], rng);
+  // Generate plausible distractors based on series context
+  const lastDiff = series.length >= 2 ? series[series.length - 1] - series[series.length - 2] : 1;
+  const plausible = [answer + 1, answer - 1, answer + lastDiff, answer - lastDiff, answer + 2, answer - 2, series[series.length - 1] + lastDiff * 2];
+  for (const p of plausible) {
+    if (dists.size >= 4) break;
+    if (p !== answer) dists.add(String(p));
+  }
+  for (let _s = 0; dists.size < 4 && _s < 100; _s++) {
+    const off = pick([-1, 1, -2, 2], rng);
     dists.add(String(answer + off));
   }
   const opts = shuffle([...dists], rng);
@@ -2512,8 +2692,8 @@ function generateWrongNumberQuestion(rng) {
   const wrong = String(series[wrongIdx]);
   // Options are: the correct replacement value
   const dists = new Set([correct]);
-  while (dists.size < 4) {
-    const off = pick([-2, -1, 1, 2, 3], rng);
+  for (let _s = 0; dists.size < 4 && _s < 100; _s++) {
+    const off = pick([-3, -2, -1, 1, 2, 3], rng);
     dists.add(String(correctVal + off));
   }
   const opts = shuffle([...dists], rng);
@@ -2557,16 +2737,16 @@ function generateSynonymQuestion(rng) {
   const idx = Math.floor(rng() * PAIRS.length);
   const [word, correct] = PAIRS[idx];
 
-  // Build distractors from other answers
+  // Build distractors from other answers (never duplicate)
   const dists = new Set([correct]);
-  let s = 0;
-  while (dists.size < 4 && s < 100) {
-    s++;
-    const other = PAIRS[Math.floor(rng() * PAIRS.length)];
-    if (other[1] !== correct && !dists.has(other[1])) dists.add(other[1]);
+  for (let s = 0; dists.size < 4 && s < 200; s++) {
+    const ri = Math.floor(rng() * PAIRS.length);
+    if (PAIRS[ri][1] !== correct && !dists.has(PAIRS[ri][1])) dists.add(PAIRS[ri][1]);
   }
-  // Fallback
-  while (dists.size < 4) dists.add(PAIRS[dists.size][1]);
+  // Safe fallback: iterate through all pairs sequentially
+  for (let i = 0; dists.size < 4 && i < PAIRS.length; i++) {
+    if (!dists.has(PAIRS[i][1])) dists.add(PAIRS[i][1]);
+  }
   const opts = shuffle([...dists], rng);
 
   return {
@@ -2606,13 +2786,14 @@ function generateAntonymQuestion(rng) {
   const [word, correct] = PAIRS[idx];
 
   const dists = new Set([correct]);
-  let s = 0;
-  while (dists.size < 4 && s < 100) {
-    s++;
-    const other = PAIRS[Math.floor(rng() * PAIRS.length)];
-    if (other[1] !== correct && !dists.has(other[1])) dists.add(other[1]);
+  for (let s = 0; dists.size < 4 && s < 200; s++) {
+    const ri = Math.floor(rng() * PAIRS.length);
+    if (PAIRS[ri][1] !== correct && !dists.has(PAIRS[ri][1])) dists.add(PAIRS[ri][1]);
   }
-  while (dists.size < 4) dists.add(PAIRS[dists.size][1]);
+  // Safe fallback: iterate through all pairs sequentially
+  for (let i = 0; dists.size < 4 && i < PAIRS.length; i++) {
+    if (!dists.has(PAIRS[i][1])) dists.add(PAIRS[i][1]);
+  }
   const opts = shuffle([...dists], rng);
 
   return {
@@ -4138,14 +4319,23 @@ function generateConditionalLogicQuestion(rng) {
 // ============================================================
 function validateQuestion(q) {
   if (!q || !q.options || !Array.isArray(q.options)) return false;
-  if (q.options.length < 2) return false;
-  if (q.answer < 0 || q.answer >= q.options.length) return false;
-  // Check for duplicate options (stringify for object options)
+  // Require exactly 4 options
+  if (q.options.length !== 4) return false;
+  // Valid answer index
+  if (typeof q.answer !== 'number' || q.answer < 0 || q.answer >= 4) return false;
+  // Question text must exist
+  if (!q.question || q.question.trim() === '') return false;
+  // Stringify all options for comparison
   const strs = q.options.map(o => typeof o === 'string' ? o : JSON.stringify(o));
+  // No empty/null options
+  for (const s of strs) {
+    if (!s || s.trim() === '' || s === 'null' || s === 'undefined') return false;
+  }
+  // No duplicate options
   const unique = new Set(strs);
-  if (unique.size !== strs.length) return false;
-  // Check answer option is not empty
-  if (!strs[q.answer] || strs[q.answer].trim() === '') return false;
+  if (unique.size !== 4) return false;
+  // Verify the correct answer option is substantive
+  if (!strs[q.answer] || strs[q.answer].trim().length === 0) return false;
   return true;
 }
 
@@ -4227,20 +4417,27 @@ const FACTOR_GENERATORS = {
 };
 
 export function generateVisualQuestions(count = 12, seed = Date.now()) {
-  const rng = seededRandom(seed);
   const questions = [];
-  const seen = new Set();
-  let safety = 0;
-  while (questions.length < count && safety < count * 10) {
-    safety++;
-    const gen = pick(VISUAL_GENERATORS, rng);
-    try {
-      const q = gen(rng);
-      if (q && !seen.has(q.id) && validateQuestion(q)) {
-        seen.add(q.id);
-        questions.push(q);
-      }
-    } catch(e) { /* skip failed generation */ }
+  const seenContent = new Set();
+  let seedOffset = 0;
+  while (questions.length < count && seedOffset < 50) {
+    const rng = seededRandom(seed + seedOffset * 7919);
+    let localSafety = 0;
+    while (questions.length < count && localSafety < count * 5) {
+      localSafety++;
+      const gen = pick(VISUAL_GENERATORS, rng);
+      try {
+        const q = gen(rng);
+        if (!q || !validateQuestion(q)) continue;
+        // Content-based dedup: use visual type + data hash + options
+        const fingerprint = (q.visualType || '') + '|' + JSON.stringify(q.visualData).slice(0, 500) + '|' + q.options.join('|');
+        if (!seenContent.has(fingerprint)) {
+          seenContent.add(fingerprint);
+          questions.push(q);
+        }
+      } catch(e) { /* skip failed generation */ }
+    }
+    seedOffset++;
   }
   return questions;
 }
@@ -4313,17 +4510,26 @@ const TEXT_GENERATORS = [
 ];
 
 export function generateTextQuestions(count = 4, seed = Date.now()) {
-  const rng = seededRandom(seed + 999);
   const questions = [];
-  const seen = new Set();
-  let safety = 0;
-  while (questions.length < count && safety < count * 10) {
-    safety++;
-    const gen = pick(TEXT_GENERATORS, rng);
-    try {
-      const q = gen(rng);
-      if (q && !seen.has(q.id) && validateQuestion(q)) { seen.add(q.id); questions.push(q); }
-    } catch(e) { /* skip */ }
+  const seenContent = new Set();
+  let seedOffset = 0;
+  while (questions.length < count && seedOffset < 50) {
+    const rng = seededRandom(seed + 999 + seedOffset * 6271);
+    let localSafety = 0;
+    while (questions.length < count && localSafety < count * 5) {
+      localSafety++;
+      const gen = pick(TEXT_GENERATORS, rng);
+      try {
+        const q = gen(rng);
+        if (!q || !validateQuestion(q)) continue;
+        const fingerprint = q.question;
+        if (!seenContent.has(fingerprint)) {
+          seenContent.add(fingerprint);
+          questions.push(q);
+        }
+      } catch(e) { /* skip */ }
+    }
+    seedOffset++;
   }
   return questions;
 }
@@ -4331,22 +4537,28 @@ export function generateTextQuestions(count = 4, seed = Date.now()) {
 export function generateFactorQuestions(factor, count, seed = Date.now()) {
   const mapping = FACTOR_GENERATORS[factor];
   if (!mapping) return [];
-  const rng = seededRandom(seed);
   const pool = [...mapping.visual, ...mapping.text];
   if (pool.length === 0) return [];
   const questions = [];
-  const seen = new Set();
-  let safety = 0;
-  while (questions.length < count && safety < count * 10) {
-    safety++;
-    const gen = pick(pool, rng);
-    try {
-      const q = gen(rng);
-      if (q && !seen.has(q.id) && validateQuestion(q)) {
-        seen.add(q.id);
-        questions.push(q);
-      }
-    } catch(e) { /* skip */ }
+  const seenContent = new Set();
+  let seedOffset = 0;
+  while (questions.length < count && seedOffset < 50) {
+    const rng = seededRandom(seed + seedOffset * 5441);
+    let localSafety = 0;
+    while (questions.length < count && localSafety < count * 5) {
+      localSafety++;
+      const gen = pick(pool, rng);
+      try {
+        const q = gen(rng);
+        if (!q || !validateQuestion(q)) continue;
+        const fingerprint = (q.visualType || '') + '|' + q.question;
+        if (!seenContent.has(fingerprint)) {
+          seenContent.add(fingerprint);
+          questions.push(q);
+        }
+      } catch(e) { /* skip */ }
+    }
+    seedOffset++;
   }
   return questions;
 }

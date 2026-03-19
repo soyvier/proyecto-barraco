@@ -4,6 +4,44 @@ Este documento se actualiza al final de cada sesion para que al compactar la con
 
 ---
 
+## Sesion 8 (2026-03-19)
+
+### Lo que se hizo:
+1. **Correccion estructural del sistema de generacion de preguntas:**
+   - `validateQuestion()` ahora requiere EXACTAMENTE 4 opciones, todas no-vacias, sin duplicados
+   - `safeDistractors()` reescrito con fallback robusto (numerico, JSON array, JSON object) para garantizar siempre 3 distractores unicos
+   - Funciones de generacion (`generateVisualQuestions`, `generateTextQuestions`, `generateFactorQuestions`) ahora usan dedup por contenido (no solo ID) y reintentos con semillas variadas
+   - Fix de bug de loop infinito en generadores de sinonimos y antonimos (fallback inseguro `while(dists.size<4)`)
+   - Safety counters añadidos a todos los loops de generacion de distractores
+
+2. **Sistema anti-repeticion entre examenes (`questions.js`):**
+   - Tracking de las ultimas 400 preguntas usadas en localStorage (`proyecto-barraco-recent`)
+   - Filtrado automatico de preguntas JSON recientes, con fallback si el pool se agota
+   - Seeds unicos por examen (`Date.now() ^ random`) para preguntas generadas
+   - Dedup intra-examen por contenido de pregunta
+
+3. **Aumento de dificultad:**
+   - Series numericas: de 10 a 16 patrones, añadidos cubos, triangulares, Fibonacci desplazado, operaciones alternas (x2+3), multiplicadores mixtos, diferencias de 2do orden, potencias intercaladas, primos+offset, sumas de primos
+   - Series de letras: de 8 a 14 patrones, añadidos palindromos, 3 series intercaladas, vocales/consonantes, saltos crecientes/decrecientes, grupos de tamano creciente, posiciones Fibonacci, espejo
+   - Dominos: eliminado patron trivial (+1/+1), añadidos patrones con Fibonacci, cuadrados, dependencias top/bottom, ciclos de 3, series intercaladas
+   - Distractores mas plausibles: dominós ±1 (no ±2), series numericas basadas en contexto (ultima diferencia)
+
+### Archivos modificados:
+- `app/src/services/visualQuestions.js` - validateQuestion, safeDistractors, generadores, loops de generacion
+- `app/src/services/questions.js` - sistema anti-repeticion completo
+
+### Estado actual:
+- 10,000 preguntas stress-tested, 0 errores, 0 opciones duplicadas, 0 duplicados de contenido
+- Build OK (435KB JS, 28KB CSS)
+- Todas las preguntas tienen exactamente 4 opciones unicas con solucion valida
+
+### Pendiente:
+- Commit y push (requiere aprobacion)
+- Testing visual en navegador
+- **Modulo Personalidad** (siguiente tarea)
+
+---
+
 ## Sesion 7 (2026-03-11)
 
 ### Lo que se hizo:
