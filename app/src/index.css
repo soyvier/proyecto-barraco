@@ -165,6 +165,25 @@
   background: rgba(201, 168, 76, 0.1);
 }
 
+/* Likert scale options */
+.likert-option {
+  background: rgba(245, 240, 232, 0.03);
+  border: 1px solid rgba(245, 240, 232, 0.1);
+  color: rgba(245, 240, 232, 0.55);
+  transition: all 0.25s ease;
+}
+
+.likert-option:hover:not(.selected) {
+  border-color: rgba(245, 240, 232, 0.25);
+  background: rgba(245, 240, 232, 0.06);
+}
+
+.likert-option.selected {
+  border-color: var(--color-accent);
+  background: rgba(201, 168, 76, 0.1);
+  color: rgba(245, 240, 232, 0.9);
+}
+
 /* Scrollbar dark */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }

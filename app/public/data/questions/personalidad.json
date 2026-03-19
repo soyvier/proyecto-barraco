@@ -1,0 +1,842 @@
+[
+  {
+    "id": "p001",
+    "dimension": "estabilidad-emocional",
+    "direction": "positive",
+    "statement": "Puedo mantener la calma en situaciones de alta presion",
+    "pair": "p046"
+  },
+  {
+    "id": "p002",
+    "dimension": "estabilidad-emocional",
+    "direction": "positive",
+    "statement": "Rara vez me siento ansioso sin motivo aparente",
+    "pair": null
+  },
+  {
+    "id": "p003",
+    "dimension": "estabilidad-emocional",
+    "direction": "negative",
+    "statement": "Me cuesta conciliar el sueno cuando tengo preocupaciones",
+    "pair": null
+  },
+  {
+    "id": "p004",
+    "dimension": "estabilidad-emocional",
+    "direction": "positive",
+    "statement": "Me recupero rapidamente de los contratiempos",
+    "pair": null
+  },
+  {
+    "id": "p005",
+    "dimension": "estabilidad-emocional",
+    "direction": "negative",
+    "statement": "A menudo me preocupo por cosas que probablemente no van a ocurrir",
+    "pair": null
+  },
+  {
+    "id": "p006",
+    "dimension": "estabilidad-emocional",
+    "direction": "negative",
+    "statement": "Las criticas me afectan mas de lo que deberian",
+    "pair": "p047"
+  },
+  {
+    "id": "p007",
+    "dimension": "estabilidad-emocional",
+    "direction": "positive",
+    "statement": "Me considero una persona emocionalmente estable",
+    "pair": null
+  },
+  {
+    "id": "p008",
+    "dimension": "estabilidad-emocional",
+    "direction": "negative",
+    "statement": "Pequenos problemas cotidianos pueden arruinarme el dia",
+    "pair": null
+  },
+  {
+    "id": "p009",
+    "dimension": "estabilidad-emocional",
+    "direction": "positive",
+    "statement": "Mantengo la serenidad aunque la gente a mi alrededor este nerviosa",
+    "pair": null
+  },
+  {
+    "id": "p010",
+    "dimension": "estabilidad-emocional",
+    "direction": "negative",
+    "statement": "Tiendo a sentirme inseguro ante situaciones nuevas",
+    "pair": null
+  },
+  {
+    "id": "p011",
+    "dimension": "estabilidad-emocional",
+    "direction": "positive",
+    "statement": "Cuando algo sale mal, busco soluciones en vez de preocuparme",
+    "pair": null
+  },
+  {
+    "id": "p012",
+    "dimension": "estabilidad-emocional",
+    "direction": "negative",
+    "statement": "A veces siento que mis emociones me desbordan",
+    "pair": null
+  },
+  {
+    "id": "p013",
+    "dimension": "estabilidad-emocional",
+    "direction": "positive",
+    "statement": "En general, me siento seguro de mi mismo",
+    "pair": null
+  },
+  {
+    "id": "p014",
+    "dimension": "estabilidad-emocional",
+    "direction": "negative",
+    "statement": "Me resulta dificil dejar de pensar en mis errores pasados",
+    "pair": null
+  },
+  {
+    "id": "p015",
+    "dimension": "estabilidad-emocional",
+    "direction": "positive",
+    "statement": "Puedo recibir malas noticias sin perder la compostura",
+    "pair": null
+  },
+  {
+    "id": "p016",
+    "dimension": "autocontrol",
+    "direction": "positive",
+    "statement": "Pienso bien las cosas antes de actuar",
+    "pair": "p048"
+  },
+  {
+    "id": "p017",
+    "dimension": "autocontrol",
+    "direction": "negative",
+    "statement": "A veces digo cosas de las que luego me arrepiento",
+    "pair": null
+  },
+  {
+    "id": "p018",
+    "dimension": "autocontrol",
+    "direction": "positive",
+    "statement": "Puedo contener mi enfado aunque me provoquen",
+    "pair": null
+  },
+  {
+    "id": "p019",
+    "dimension": "autocontrol",
+    "direction": "negative",
+    "statement": "Me cuesta resistir la tentacion de hacer algo que se que no debo",
+    "pair": null
+  },
+  {
+    "id": "p020",
+    "dimension": "autocontrol",
+    "direction": "positive",
+    "statement": "Soy capaz de mantener la paciencia en situaciones frustrantes",
+    "pair": null
+  },
+  {
+    "id": "p021",
+    "dimension": "autocontrol",
+    "direction": "negative",
+    "statement": "Cuando estoy enfadado, me cuesta controlar lo que digo",
+    "pair": "p049"
+  },
+  {
+    "id": "p022",
+    "dimension": "autocontrol",
+    "direction": "positive",
+    "statement": "Ante una provocacion, prefiero alejarme antes que responder agresivamente",
+    "pair": null
+  },
+  {
+    "id": "p023",
+    "dimension": "autocontrol",
+    "direction": "negative",
+    "statement": "Tiendo a tomar decisiones impulsivas que luego lamento",
+    "pair": null
+  },
+  {
+    "id": "p024",
+    "dimension": "autocontrol",
+    "direction": "positive",
+    "statement": "Puedo esperar pacientemente para obtener lo que quiero",
+    "pair": null
+  },
+  {
+    "id": "p025",
+    "dimension": "autocontrol",
+    "direction": "negative",
+    "statement": "En discusiones acaloradas, a veces pierdo los nervios",
+    "pair": null
+  },
+  {
+    "id": "p026",
+    "dimension": "autocontrol",
+    "direction": "positive",
+    "statement": "Se controlar mis impulsos incluso cuando estoy bajo presion",
+    "pair": null
+  },
+  {
+    "id": "p027",
+    "dimension": "autocontrol",
+    "direction": "negative",
+    "statement": "A veces actuo sin pensar en las consecuencias",
+    "pair": null
+  },
+  {
+    "id": "p028",
+    "dimension": "autocontrol",
+    "direction": "positive",
+    "statement": "Mantengo la calma cuando alguien me falta al respeto",
+    "pair": null
+  },
+  {
+    "id": "p029",
+    "dimension": "autocontrol",
+    "direction": "negative",
+    "statement": "Me resulta dificil esperar mi turno cuando tengo prisa",
+    "pair": null
+  },
+  {
+    "id": "p030",
+    "dimension": "autocontrol",
+    "direction": "positive",
+    "statement": "Siempre valoro las posibles consecuencias antes de tomar una decision importante",
+    "pair": null
+  },
+  {
+    "id": "p031",
+    "dimension": "sociabilidad",
+    "direction": "positive",
+    "statement": "Disfruto trabajando en equipo",
+    "pair": "p050"
+  },
+  {
+    "id": "p032",
+    "dimension": "sociabilidad",
+    "direction": "negative",
+    "statement": "Prefiero trabajar solo antes que en grupo",
+    "pair": null
+  },
+  {
+    "id": "p033",
+    "dimension": "sociabilidad",
+    "direction": "positive",
+    "statement": "Me resulta facil entablar conversacion con desconocidos",
+    "pair": null
+  },
+  {
+    "id": "p034",
+    "dimension": "sociabilidad",
+    "direction": "negative",
+    "statement": "Me cuesta entender los sentimientos de los demas",
+    "pair": null
+  },
+  {
+    "id": "p035",
+    "dimension": "sociabilidad",
+    "direction": "positive",
+    "statement": "Suelo ponerme en el lugar de los demas antes de juzgarles",
+    "pair": null
+  },
+  {
+    "id": "p036",
+    "dimension": "sociabilidad",
+    "direction": "negative",
+    "statement": "Las reuniones sociales me resultan agotadoras",
+    "pair": null
+  },
+  {
+    "id": "p037",
+    "dimension": "sociabilidad",
+    "direction": "positive",
+    "statement": "La gente suele confiar en mi para contarme sus problemas",
+    "pair": null
+  },
+  {
+    "id": "p038",
+    "dimension": "sociabilidad",
+    "direction": "negative",
+    "statement": "Me incomoda tener que tratar con muchas personas a lo largo del dia",
+    "pair": "p051"
+  },
+  {
+    "id": "p039",
+    "dimension": "sociabilidad",
+    "direction": "positive",
+    "statement": "Se comunicarme de forma clara y respetuosa",
+    "pair": null
+  },
+  {
+    "id": "p040",
+    "dimension": "sociabilidad",
+    "direction": "negative",
+    "statement": "Evito los conflictos interpersonales incluso cuando deberia intervenir",
+    "pair": null
+  },
+  {
+    "id": "p041",
+    "dimension": "sociabilidad",
+    "direction": "positive",
+    "statement": "Me preocupo sinceramente por el bienestar de mis companeros",
+    "pair": null
+  },
+  {
+    "id": "p042",
+    "dimension": "sociabilidad",
+    "direction": "positive",
+    "statement": "Me adapto bien a grupos nuevos de personas",
+    "pair": null
+  },
+  {
+    "id": "p043",
+    "dimension": "sociabilidad",
+    "direction": "negative",
+    "statement": "Me cuesta pedir ayuda cuando la necesito",
+    "pair": null
+  },
+  {
+    "id": "p044",
+    "dimension": "sociabilidad",
+    "direction": "positive",
+    "statement": "Escucho atentamente cuando alguien me habla",
+    "pair": null
+  },
+  {
+    "id": "p045",
+    "dimension": "sociabilidad",
+    "direction": "positive",
+    "statement": "Me gusta conocer gente nueva y diferentes puntos de vista",
+    "pair": null
+  },
+  {
+    "id": "p046",
+    "dimension": "estabilidad-emocional",
+    "direction": "positive",
+    "statement": "No pierdo la tranquilidad facilmente, ni siquiera en momentos criticos",
+    "pair": "p001"
+  },
+  {
+    "id": "p047",
+    "dimension": "estabilidad-emocional",
+    "direction": "negative",
+    "statement": "Me tomo las opiniones negativas sobre mi de forma muy personal",
+    "pair": "p006"
+  },
+  {
+    "id": "p048",
+    "dimension": "autocontrol",
+    "direction": "positive",
+    "statement": "Reflexiono antes de actuar, incluso cuando tengo poco tiempo",
+    "pair": "p016"
+  },
+  {
+    "id": "p049",
+    "dimension": "autocontrol",
+    "direction": "negative",
+    "statement": "He levantado la voz en alguna discusion mas de lo que me habria gustado",
+    "pair": "p021"
+  },
+  {
+    "id": "p050",
+    "dimension": "sociabilidad",
+    "direction": "positive",
+    "statement": "Rindo mejor cuando colaboro con otros que cuando trabajo en solitario",
+    "pair": "p031"
+  },
+  {
+    "id": "p051",
+    "dimension": "sociabilidad",
+    "direction": "positive",
+    "statement": "Me siento comodo tratando con todo tipo de personas durante la jornada",
+    "pair": "p038"
+  },
+  {
+    "id": "p052",
+    "dimension": "responsabilidad",
+    "direction": "positive",
+    "statement": "Siempre llego puntual a mis compromisos",
+    "pair": "p062"
+  },
+  {
+    "id": "p053",
+    "dimension": "responsabilidad",
+    "direction": "negative",
+    "statement": "A veces dejo tareas importantes para el ultimo momento",
+    "pair": null
+  },
+  {
+    "id": "p054",
+    "dimension": "responsabilidad",
+    "direction": "positive",
+    "statement": "Cumplo con mis obligaciones aunque nadie me supervise",
+    "pair": null
+  },
+  {
+    "id": "p055",
+    "dimension": "responsabilidad",
+    "direction": "negative",
+    "statement": "Me cuesta seguir normas que considero innecesarias",
+    "pair": "p063"
+  },
+  {
+    "id": "p056",
+    "dimension": "responsabilidad",
+    "direction": "positive",
+    "statement": "Soy una persona muy organizada en mi trabajo",
+    "pair": null
+  },
+  {
+    "id": "p057",
+    "dimension": "responsabilidad",
+    "direction": "negative",
+    "statement": "A veces me distraigo con facilidad cuando deberia estar concentrado",
+    "pair": null
+  },
+  {
+    "id": "p058",
+    "dimension": "responsabilidad",
+    "direction": "positive",
+    "statement": "Cuando asumo un compromiso, lo cumplo cueste lo que cueste",
+    "pair": null
+  },
+  {
+    "id": "p059",
+    "dimension": "responsabilidad",
+    "direction": "negative",
+    "statement": "En ocasiones me salto algun paso de un procedimiento si me parece poco importante",
+    "pair": null
+  },
+  {
+    "id": "p060",
+    "dimension": "responsabilidad",
+    "direction": "positive",
+    "statement": "Reviso mi trabajo para asegurarme de que no hay errores",
+    "pair": null
+  },
+  {
+    "id": "p061",
+    "dimension": "responsabilidad",
+    "direction": "negative",
+    "statement": "Me resulta dificil mantener un horario fijo de trabajo",
+    "pair": null
+  },
+  {
+    "id": "p062",
+    "dimension": "responsabilidad",
+    "direction": "positive",
+    "statement": "La puntualidad es algo que cuido especialmente",
+    "pair": "p052"
+  },
+  {
+    "id": "p063",
+    "dimension": "responsabilidad",
+    "direction": "positive",
+    "statement": "Respeto todas las normas establecidas, aunque no este de acuerdo con todas",
+    "pair": "p055"
+  },
+  {
+    "id": "p064",
+    "dimension": "responsabilidad",
+    "direction": "positive",
+    "statement": "Me aseguro de terminar todas mis tareas antes de irme a casa",
+    "pair": null
+  },
+  {
+    "id": "p065",
+    "dimension": "responsabilidad",
+    "direction": "negative",
+    "statement": "Reconozco que a veces mi escritorio o espacio de trabajo esta desordenado",
+    "pair": null
+  },
+  {
+    "id": "p066",
+    "dimension": "responsabilidad",
+    "direction": "positive",
+    "statement": "Priorizo mis tareas de forma eficiente para cumplir los plazos",
+    "pair": null
+  },
+  {
+    "id": "p067",
+    "dimension": "liderazgo",
+    "direction": "positive",
+    "statement": "En un grupo, suelo asumir el papel de coordinador de forma natural",
+    "pair": "p077"
+  },
+  {
+    "id": "p068",
+    "dimension": "liderazgo",
+    "direction": "negative",
+    "statement": "Prefiero que otros tomen las decisiones importantes",
+    "pair": null
+  },
+  {
+    "id": "p069",
+    "dimension": "liderazgo",
+    "direction": "positive",
+    "statement": "Me siento comodo dando instrucciones a otros",
+    "pair": null
+  },
+  {
+    "id": "p070",
+    "dimension": "liderazgo",
+    "direction": "negative",
+    "statement": "Me cuesta tomar decisiones cuando hay mucho en juego",
+    "pair": null
+  },
+  {
+    "id": "p071",
+    "dimension": "liderazgo",
+    "direction": "positive",
+    "statement": "Se motivar a los demas para que den lo mejor de si",
+    "pair": null
+  },
+  {
+    "id": "p072",
+    "dimension": "liderazgo",
+    "direction": "negative",
+    "statement": "Evito situaciones en las que tenga que liderar un grupo",
+    "pair": "p078"
+  },
+  {
+    "id": "p073",
+    "dimension": "liderazgo",
+    "direction": "positive",
+    "statement": "Tomo decisiones con rapidez cuando la situacion lo requiere",
+    "pair": null
+  },
+  {
+    "id": "p074",
+    "dimension": "liderazgo",
+    "direction": "negative",
+    "statement": "Me siento incomodo cuando tengo que corregir a un companero",
+    "pair": null
+  },
+  {
+    "id": "p075",
+    "dimension": "liderazgo",
+    "direction": "positive",
+    "statement": "Asumo la responsabilidad de mis decisiones sin culpar a otros",
+    "pair": null
+  },
+  {
+    "id": "p076",
+    "dimension": "liderazgo",
+    "direction": "negative",
+    "statement": "Me paralizo cuando debo elegir entre opciones dificiles",
+    "pair": null
+  },
+  {
+    "id": "p077",
+    "dimension": "liderazgo",
+    "direction": "positive",
+    "statement": "La gente me busca para organizar actividades o resolver problemas",
+    "pair": "p067"
+  },
+  {
+    "id": "p078",
+    "dimension": "liderazgo",
+    "direction": "positive",
+    "statement": "Me siento comodo asumiendo el mando cuando es necesario",
+    "pair": "p072"
+  },
+  {
+    "id": "p079",
+    "dimension": "liderazgo",
+    "direction": "positive",
+    "statement": "Se delegar tareas de forma justa y eficiente",
+    "pair": null
+  },
+  {
+    "id": "p080",
+    "dimension": "liderazgo",
+    "direction": "negative",
+    "statement": "Prefiero seguir instrucciones antes que tener que darlas",
+    "pair": null
+  },
+  {
+    "id": "p081",
+    "dimension": "liderazgo",
+    "direction": "positive",
+    "statement": "En una emergencia, soy de los primeros en reaccionar y organizar al grupo",
+    "pair": null
+  },
+  {
+    "id": "p082",
+    "dimension": "tolerancia-estres",
+    "direction": "positive",
+    "statement": "Funciono bien bajo presion y con plazos ajustados",
+    "pair": "p092"
+  },
+  {
+    "id": "p083",
+    "dimension": "tolerancia-estres",
+    "direction": "negative",
+    "statement": "Me bloqueo cuando tengo demasiadas tareas a la vez",
+    "pair": null
+  },
+  {
+    "id": "p084",
+    "dimension": "tolerancia-estres",
+    "direction": "positive",
+    "statement": "He demostrado capacidad para actuar correctamente en situaciones de emergencia",
+    "pair": null
+  },
+  {
+    "id": "p085",
+    "dimension": "tolerancia-estres",
+    "direction": "negative",
+    "statement": "El estres prolongado afecta negativamente a mi rendimiento",
+    "pair": null
+  },
+  {
+    "id": "p086",
+    "dimension": "tolerancia-estres",
+    "direction": "positive",
+    "statement": "Puedo mantener la concentracion en tareas importantes aunque haya distracciones",
+    "pair": null
+  },
+  {
+    "id": "p087",
+    "dimension": "tolerancia-estres",
+    "direction": "negative",
+    "statement": "Cuando acumulo mucho trabajo, me siento abrumado",
+    "pair": "p093"
+  },
+  {
+    "id": "p088",
+    "dimension": "tolerancia-estres",
+    "direction": "positive",
+    "statement": "Se gestionar bien mi energia durante jornadas largas e intensas",
+    "pair": null
+  },
+  {
+    "id": "p089",
+    "dimension": "tolerancia-estres",
+    "direction": "negative",
+    "statement": "Cuando algo sale mal de forma inesperada, me cuesta reaccionar con rapidez",
+    "pair": null
+  },
+  {
+    "id": "p090",
+    "dimension": "tolerancia-estres",
+    "direction": "positive",
+    "statement": "Puedo tomar decisiones acertadas incluso en momentos de mucha tension",
+    "pair": null
+  },
+  {
+    "id": "p091",
+    "dimension": "tolerancia-estres",
+    "direction": "negative",
+    "statement": "Noto sintomas fisicos como dolor de cabeza o tension muscular cuando estoy estresado",
+    "pair": null
+  },
+  {
+    "id": "p092",
+    "dimension": "tolerancia-estres",
+    "direction": "positive",
+    "statement": "Rindo mejor cuando tengo algo de presion que cuando todo es tranquilo",
+    "pair": "p082"
+  },
+  {
+    "id": "p093",
+    "dimension": "tolerancia-estres",
+    "direction": "positive",
+    "statement": "Aunque tenga mucha carga de trabajo, consigo mantener un buen nivel de rendimiento",
+    "pair": "p087"
+  },
+  {
+    "id": "p094",
+    "dimension": "tolerancia-estres",
+    "direction": "positive",
+    "statement": "Despues de una situacion muy tensa, me recupero con facilidad",
+    "pair": null
+  },
+  {
+    "id": "p095",
+    "dimension": "tolerancia-estres",
+    "direction": "negative",
+    "statement": "Me cuesta dormir bien cuando tengo mucha responsabilidad encima",
+    "pair": null
+  },
+  {
+    "id": "p096",
+    "dimension": "tolerancia-estres",
+    "direction": "positive",
+    "statement": "Mantengo la lucidez para pensar con claridad en situaciones criticas",
+    "pair": null
+  },
+  {
+    "id": "p097",
+    "dimension": "adaptabilidad",
+    "direction": "positive",
+    "statement": "Me adapto con facilidad a los cambios de planes",
+    "pair": "p104"
+  },
+  {
+    "id": "p098",
+    "dimension": "adaptabilidad",
+    "direction": "negative",
+    "statement": "Prefiero las rutinas establecidas a los cambios constantes",
+    "pair": null
+  },
+  {
+    "id": "p099",
+    "dimension": "adaptabilidad",
+    "direction": "positive",
+    "statement": "Ante un imprevisto, busco rapidamente una solucion alternativa",
+    "pair": null
+  },
+  {
+    "id": "p100",
+    "dimension": "adaptabilidad",
+    "direction": "negative",
+    "statement": "Los cambios de ultima hora me generan mucha incomodidad",
+    "pair": "p105"
+  },
+  {
+    "id": "p101",
+    "dimension": "adaptabilidad",
+    "direction": "positive",
+    "statement": "Puedo cambiar mi forma de trabajar si la situacion lo exige",
+    "pair": null
+  },
+  {
+    "id": "p102",
+    "dimension": "adaptabilidad",
+    "direction": "negative",
+    "statement": "Me cuesta aceptar nuevas formas de hacer las cosas si las anteriores funcionaban",
+    "pair": null
+  },
+  {
+    "id": "p103",
+    "dimension": "adaptabilidad",
+    "direction": "positive",
+    "statement": "Me desenvuelvo bien en entornos que cambian constantemente",
+    "pair": null
+  },
+  {
+    "id": "p104",
+    "dimension": "adaptabilidad",
+    "direction": "positive",
+    "statement": "No me molesta cuando mis planes tienen que cambiar de repente",
+    "pair": "p097"
+  },
+  {
+    "id": "p105",
+    "dimension": "adaptabilidad",
+    "direction": "positive",
+    "statement": "Los imprevistos no me desestabilizan, los veo como parte del trabajo",
+    "pair": "p100"
+  },
+  {
+    "id": "p106",
+    "dimension": "adaptabilidad",
+    "direction": "negative",
+    "statement": "Necesito tiempo para acostumbrarme a un nuevo entorno de trabajo",
+    "pair": null
+  },
+  {
+    "id": "p107",
+    "dimension": "adaptabilidad",
+    "direction": "positive",
+    "statement": "Me resulta estimulante enfrentarme a retos nuevos y desconocidos",
+    "pair": null
+  },
+  {
+    "id": "p108",
+    "dimension": "adaptabilidad",
+    "direction": "negative",
+    "statement": "Me siento mas seguro cuando se exactamente que esperar de cada dia",
+    "pair": null
+  },
+  {
+    "id": "p109",
+    "dimension": "adaptabilidad",
+    "direction": "positive",
+    "statement": "Puedo desempenar diferentes funciones segun lo que se necesite en cada momento",
+    "pair": null
+  },
+  {
+    "id": "p110",
+    "dimension": "adaptabilidad",
+    "direction": "negative",
+    "statement": "Me frustra cuando las instrucciones cambian despues de haber empezado una tarea",
+    "pair": null
+  },
+  {
+    "id": "p111",
+    "dimension": "adaptabilidad",
+    "direction": "positive",
+    "statement": "Aprendo rapido cuando me asignan tareas que no he hecho antes",
+    "pair": null
+  },
+  {
+    "id": "p112",
+    "dimension": "sinceridad",
+    "direction": "positive",
+    "statement": "Nunca he mentido, ni siquiera una mentira piadosa",
+    "pair": null
+  },
+  {
+    "id": "p113",
+    "dimension": "sinceridad",
+    "direction": "positive",
+    "statement": "Siempre cumplo todas las normas de trafico sin excepcion",
+    "pair": null
+  },
+  {
+    "id": "p114",
+    "dimension": "sinceridad",
+    "direction": "positive",
+    "statement": "Nunca he sentido envidia de nadie",
+    "pair": null
+  },
+  {
+    "id": "p115",
+    "dimension": "sinceridad",
+    "direction": "positive",
+    "statement": "Jamas he hablado mal de alguien a sus espaldas",
+    "pair": null
+  },
+  {
+    "id": "p116",
+    "dimension": "sinceridad",
+    "direction": "positive",
+    "statement": "Nunca he llegado tarde a ninguna cita o compromiso",
+    "pair": null
+  },
+  {
+    "id": "p117",
+    "dimension": "sinceridad",
+    "direction": "positive",
+    "statement": "Siempre he tratado a todo el mundo con el mismo respeto, sin excepcion",
+    "pair": null
+  },
+  {
+    "id": "p118",
+    "dimension": "sinceridad",
+    "direction": "positive",
+    "statement": "Nunca me he enfadado sin motivo justificado",
+    "pair": null
+  },
+  {
+    "id": "p119",
+    "dimension": "sinceridad",
+    "direction": "positive",
+    "statement": "Jamas he dejado de cumplir una promesa que he hecho",
+    "pair": null
+  },
+  {
+    "id": "p120",
+    "dimension": "sinceridad",
+    "direction": "positive",
+    "statement": "Nunca he sentido el impulso de romper una norma, por pequena que sea",
+    "pair": null
+  }
+]

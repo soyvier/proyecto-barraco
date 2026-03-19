@@ -34,14 +34,17 @@ export default function Home() {
         </button>
 
         {/* Personalidad */}
-        <div className="card-glass disabled rounded-xl px-12 py-10 w-56 text-center relative">
-          <h2 className="text-bone/40 text-xs tracking-[0.25em] font-light uppercase">
+        <button
+          onClick={() => navigate('/personalidad')}
+          className="card-glass rounded-xl px-12 py-10 w-56 text-center"
+        >
+          <h2 className="text-bone/80 text-xs tracking-[0.25em] font-light uppercase">
             Personalidad
           </h2>
-          <p className="card-subtitle text-bone/20 text-[11px] tracking-wider font-light">
-            Proximamente
+          <p className="card-subtitle text-bone/30 text-[11px] tracking-wider font-light">
+            Test de perfil psicologico
           </p>
-        </div>
+        </button>
       </div>
     </div>
   );

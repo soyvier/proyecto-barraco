@@ -4,6 +4,52 @@ Este documento se actualiza al final de cada sesion para que al compactar la con
 
 ---
 
+## Sesion 9 (2026-03-19)
+
+### Lo que se hizo:
+1. **Commit de Session 8** - Cambios de hardening de preguntas y anti-repeticion committeados
+
+2. **Modulo Personalidad completo** - Activado el boton en Home, todo separado de Psicotecnico:
+   - **120 afirmaciones** en `personalidad.json` across 8 dimensiones:
+     - estabilidad-emocional(17), autocontrol(17), sociabilidad(17), responsabilidad(15), liderazgo(15), tolerancia-estres(15), adaptabilidad(15), sinceridad/control(9)
+   - **14 pares de consistencia** (28 afirmaciones pareadas, bidireccionales)
+   - **Servicio completo** (`personalidad.js`): load, pick, score, consistencia, storage separado
+   - **2 modos de test**: Completo (100 afirmaciones) y Rapido (40)
+   - **Escala Likert 3 puntos**: "De acuerdo" / "Indiferente" / "En desacuerdo"
+   - **Scoring por dimension**: direction positive/negative, reverse scoring
+   - **Deteccion de sinceridad**: warning si score > 9 (deseabilidad social)
+   - **Consistencia**: compara pares de preguntas, % de coherencia
+   - **Resultados**: barras por dimension con colores (rojo/amarillo/verde), inconsistencias expandibles
+   - **Historial**: intentos anteriores con desglose expandible por dimension
+   - **Analisis**: perfil promedio, consistencia promedio, evolucion (ultimos 10 tests), consejos
+   - **Timer ascendente** (sin limite, solo muestra tiempo transcurrido)
+   - **Auto-avance** 300ms al seleccionar respuesta (mismo que psicotecnico)
+   - **Datos separados**: localStorage key `proyecto-barraco-personalidad` (no interfiere con psicotecnico)
+
+### Archivos creados:
+- `app/public/data/questions/personalidad.json` - 120 afirmaciones, 8 dimensiones
+- `app/src/services/personalidad.js` - servicio completo
+- `app/src/pages/PersonalidadMenu.jsx` - menu del modulo
+- `app/src/pages/PersonalidadExam.jsx` - test + resultados inline
+- `app/src/pages/PersonalidadHistory.jsx` - historial de intentos
+- `app/src/pages/PersonalidadAnalysis.jsx` - analisis y evolucion
+
+### Archivos modificados:
+- `app/src/App.jsx` - 4 nuevas rutas /personalidad/*
+- `app/src/pages/Home.jsx` - boton Personalidad activado
+- `app/src/index.css` - estilos .likert-option
+
+### Estado actual:
+- Build OK (455KB JS, 30KB CSS)
+- 120 afirmaciones validadas, 14 pares bidireccionales, 0 errores
+- Ambos modulos (Psicotecnico + Personalidad) activos y separados
+
+### Pendiente:
+- Commit y push (requiere aprobacion)
+- Testing visual en navegador
+
+---
+
 ## Sesion 8 (2026-03-19)
 
 ### Lo que se hizo:
